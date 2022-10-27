@@ -8,8 +8,8 @@ from player_interaction import (
     Player,
     handle_task,
     send_error,
-    validate_action,
 )
+from models import Init
 
 app = FastAPI()
 
@@ -57,13 +57,13 @@ async def game(token: str, websocket: WebSocket):
 
         try:
             initial_data = await websocket.receive_json()
-            initial_data = validate_action(initial_data)
+            initial_data = Init(**initial_data)
         except ValidationError as e:
-            await send_error(e.json(), websocket)
+            await send_error(e, websocket)
             await websocket.close(code=1007)
             return
 
-        p = Player(initial_data.data["nickname"], websocket)
+        p = Player(initial_data.nickname, websocket)
         await lobby.player_join(p)
 
         while True:
