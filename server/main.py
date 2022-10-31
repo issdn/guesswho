@@ -1,16 +1,15 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import secrets
-from pydantic import ValidationError
 
 from player_interaction import (
     SocketManager,
-    Player,
     handle_task,
     send_error,
     handle_player_join,
 )
-from models import Info, Task
+
+from models import Task
 
 app = FastAPI()
 
@@ -39,7 +38,6 @@ async def new_game():
 
 task  :: always sent by user -> validated by server -> sent to all users
 error :: always sent by server to a single user
-info  :: sent by user or server
 """
 
 
@@ -53,21 +51,18 @@ async def game(token: str, websocket: WebSocket):
     lobby = lobbies[token]
 
     await websocket.accept()
-    if len(lobby.players) < 2:
-        initial_data = await websocket.receive_json()
-        player = await handle_player_join(initial_data, lobby, websocket)
+    try:
+        if len(lobby.players) < 2:
+            initial_data = await websocket.receive_json()
+            player = await handle_player_join(initial_data, lobby, websocket)
 
-        while True:
-            message = await websocket.receive_json()
-            await handle_task(message, lobby, player)
-    else:
-        await send_error("Lobby is full.", websocket)
-        websocket.close(code=1007)
-
-
-@app.websocket("/{token}/game/ws")
-async def game(token: str, websocket: WebSocket):
-    lobby = lobbies[token]
-    while True:
-        data = await websocket.receive_json()
-        await lobby.broadcast(data)
+            while True:
+                message = await websocket.receive_json()
+                await handle_task(message, lobby, player)
+        else:
+            await send_error("Lobby is full.", websocket)
+            await websocket.close(code=1007)
+    except WebSocketDisconnect:
+        player_id = player.lobby_id
+        lobby.player_leave(player)
+        await lobby.broadcast(Task(task="player_leave", lobby_id=player_id))

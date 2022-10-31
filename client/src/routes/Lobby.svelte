@@ -2,19 +2,20 @@
 import {
     onMount
 } from "svelte"
-	import { handleTask } from "./socket";
 import {
-    player,
-    enemy
+    handleTask
+} from "./socket";
+import {
+    lobby,
+    my_lobby_id
 } from "./stores"
 
 export let ws: WebSocket;
 
 const sendTask = (event: Event, taskType: string) => {
     ws.send(JSON.stringify({
-        type: "task",
-        "task": taskType,
-        lobby_id: $player.lobby_id
+        task: taskType,
+        lobby_id: $my_lobby_id
     }))
     event.preventDefault();
 }
@@ -27,13 +28,17 @@ onMount(() => {
 })
 </script>
 
-<div class="flex flex-col gap-y-8 justify-center items-center">
-    <p class="text-4xl text-secondaryYellow">p1: {$player.nickname}</p>
-    {#if $enemy.lobby_id != -1}
-    <div class="flex flex-row gap-x-8 text-secondaryYellow">
-        <p class="text-4xl">p2: {$enemy.nickname}</p>
-        <p class="text-lg">{$enemy.ready ? "ready" : "not ready"}</p>
+<div class="flex flex-col gap-y-8 justify-center items-center text-secondaryYellow">
+    <p class="text-4xl">you: {$lobby[$my_lobby_id].nickname}</p>
+    {#each Object.entries($lobby) as [id, player] }
+    {#if parseInt(id) !== $my_lobby_id}
+    <div class="flex flex-row gap-x-1">
+        <p class="text-4xl">enemy: {player.nickname}</p>
+        {#if parseInt(id) !== $my_lobby_id}
+        <p class="text-lg">{player.ready ? "ready" : "not ready"}</p>
+        {/if}
     </div>
     {/if}
-    <button on:click={(e) => sendTask(e, "player_ready")} class="uppercase bg-secondaryYellow rounded-md px-16 text-2xl">{$player.ready ? "ready" : "not ready"}</button>
+    {/each}
+    <button on:click={(e) => sendTask(e, "player_ready")} class="uppercase bg-secondaryYellow rounded-md px-16 text-2xl text-black">{$lobby[$my_lobby_id].ready ? "ready" : "not ready"}</button>
 </div>

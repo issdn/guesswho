@@ -1,30 +1,36 @@
-from typing import Optional, Literal
-from pydantic import BaseModel
+from typing import Optional, Literal, Union
+from pydantic import BaseModel, Field
 
-TaskType = Literal["player_ready", "player_leave", "player_join", "set_creator", "init"]
-
-
-class InfoBase(BaseModel):
-    nickname: Optional[str]
-    creator: Optional[bool]
-    lobby_id: Optional[int]
-    ready: Optional[bool]
+TaskType = Union[
+    Literal["player_leave"],
+    Literal["player_join"],
+    Literal["set_creator"],
+    Literal["player_ready"],
+]
 
 
-class Task(InfoBase):
-    type: Literal["task"]
+class Task(BaseModel):
     task: TaskType
+    lobby_id: int
+
+
+class PlayerJoin(BaseModel):
+    task: Literal["player_join"]
+    nickname: str
+
+
+class PlayerInitInfo(BaseModel):
+    creator: bool
+    ready: bool
+    nickname: str
+
+
+class PlayerJoinResponse(Task):
+    lobby_id: int
+    data: PlayerInitInfo
 
 
 class Error(BaseModel):
-    type: Literal["error"]
+    type: Literal["error"] = "error"
     message: str
     field: Optional[str] = None
-
-
-class Info(InfoBase):
-    type: Literal["info"]
-    task: Optional[TaskType]
-
-
-action_types = {"task": Task, "error": Error, "info": Info}

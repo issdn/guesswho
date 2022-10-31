@@ -1,16 +1,26 @@
 <script lang="ts">
+	import type { PlayerJoin } from "src/types";
     import Lobby from "./Lobby.svelte"
 	import { handleTask } from "./socket";
-    import { token, player } from "./stores"
+    import { token, lobby, my_lobby_id } from "./stores"
 
     let inLobby = false;
+    let nickname = "anonymous"
 
     let ws: WebSocket;
+
+    const handlePlayerJoin = (message: PlayerJoin) => {
+        delete message.task
+        my_lobby_id.set(message.player_id as number)
+        console.log($my_lobby_id)
+        delete message.player_id
+        lobby.set(message)
+    }
 
     const joinLobby = async () => {
         ws = new WebSocket(`ws://localhost:8000/${$token}/lobby/ws`);
         ws.onopen = (event: Event) => {
-            ws.send(JSON.stringify({type: "task", "task": "player_join", nickname: $player.nickname}))
+            ws.send(JSON.stringify({"task": "player_join", nickname: nickname}))
         }
         ws.onmessage = (event: MessageEvent)=>{
             const message = JSON.parse(JSON.parse(event.data));
@@ -47,7 +57,7 @@
     <div class="text-2xl flex flex-col gap-y-8">
         {#if !inLobby}
             <div>
-                <input bind:value={$player.nickname}/>
+                <input bind:value={nickname}/>
             </div>
             <button on:click={createNewGame} class="flex flex-row gap-x-4 bg-secondaryYellow text-black-600 px-8 py-2 rounded-full">
                 <p class="w-full text-center">
