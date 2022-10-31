@@ -8,8 +8,9 @@ from player_interaction import (
     Player,
     handle_task,
     send_error,
+    handle_player_join,
 )
-from models import Init
+from models import Info, Task
 
 app = FastAPI()
 
@@ -30,7 +31,7 @@ lobbies: dict[str, SocketManager] = {}
 async def new_game():
     token = secrets.token_urlsafe(8)
     lobbies[token] = SocketManager()
-    return {"init": {"token": token}}
+    return {"type": "info", "token": token}
 
 
 """
@@ -38,8 +39,7 @@ async def new_game():
 
 task  :: always sent by user -> validated by server -> sent to all users
 error :: always sent by server to a single user
-init  :: always sent by single user to server
-info  :: always sent by server to minimum 1 user
+info  :: sent by user or server
 """
 
 
@@ -52,25 +52,17 @@ async def game(token: str, websocket: WebSocket):
     """
     lobby = lobbies[token]
 
+    await websocket.accept()
     if len(lobby.players) < 2:
-        await websocket.accept()
-
-        try:
-            initial_data = await websocket.receive_json()
-            initial_data = Init(**initial_data)
-        except ValidationError as e:
-            await send_error(e, websocket)
-            await websocket.close(code=1007)
-            return
-
-        p = Player(initial_data.nickname, websocket)
-        await lobby.player_join(p)
+        initial_data = await websocket.receive_json()
+        player = await handle_player_join(initial_data, lobby, websocket)
 
         while True:
-            message = await p.websocket.receive_json()
-            await handle_task(message, lobby, p)
+            message = await websocket.receive_json()
+            await handle_task(message, lobby, player)
     else:
         await send_error("Lobby is full.", websocket)
+        websocket.close(code=1007)
 
 
 @app.websocket("/{token}/game/ws")

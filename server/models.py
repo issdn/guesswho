@@ -1,15 +1,17 @@
 from typing import Optional, Literal
 from pydantic import BaseModel
 
-TaskType = Literal["player_ready", "player_leave", "player_join", "set_creator"]
+TaskType = Literal["player_ready", "player_leave", "player_join", "set_creator", "init"]
 
 
-class Init(BaseModel):
-    type: Literal["init"]
-    nickname: str
+class InfoBase(BaseModel):
+    nickname: Optional[str]
+    creator: Optional[bool]
+    lobby_id: Optional[int]
+    ready: Optional[bool]
 
 
-class Task(BaseModel):
+class Task(InfoBase):
     type: Literal["task"]
     task: TaskType
 
@@ -20,12 +22,9 @@ class Error(BaseModel):
     field: Optional[str] = None
 
 
-class Info(BaseModel):
+class Info(InfoBase):
     type: Literal["info"]
-    task: TaskType
-    nickname: Optional[str]
-    creator: Optional[bool]
-    lobby_id: Optional[int]
+    task: Optional[TaskType]
 
 
-action_types = {"task": Task, "init": Init, "error": Error, "info": Info}
+action_types = {"task": Task, "error": Error, "info": Info}
