@@ -2,17 +2,18 @@ export type Player = {
 	nickname: string;
 	creator: boolean;
 	ready: boolean;
+	lobby_id: number;
 };
 
 export type Task = {
-	task: 'player_ready' | 'player_leave' | 'set_creator';
+	task: 'player_ready' | 'player_leave' | 'set_creator' | 'start';
 	lobby_id: number;
 };
 
 export interface PlayerJoin {
 	task?: 'player_join';
-	player_id?: number;
-	[key: number]: Player;
+	lobby_id?: number;
+	players: [Player];
 }
 
 export type Error = {
@@ -21,4 +22,4 @@ export type Error = {
 	field?: string;
 };
 
-export type PlayerStore = { [key: number]: Player };
+export type PlayerStore = Record<number, Player>;

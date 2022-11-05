@@ -1,6 +1,8 @@
 import { writable } from 'svelte/store';
-import type { Task, Player, PlayerStore } from '../types';
+import type { PlayerStore } from '../types';
 
+export const phase = writable<'lobby' | 'game' | ''>('');
 export const token = writable<string>('');
 export const lobby = writable<PlayerStore>({});
-export const my_lobby_id = writable<number>(-1);
+export const myLobbyId = writable<number>(-1);
+export const enemyLobbyId = writable<number>(-1);

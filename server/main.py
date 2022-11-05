@@ -1,6 +1,8 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 import secrets
+from os.path import abspath
 
 from player_interaction import (
     SocketManager,
@@ -30,7 +32,7 @@ lobbies: dict[str, SocketManager] = {}
 async def new_game():
     token = secrets.token_urlsafe(8)
     lobbies[token] = SocketManager()
-    return {"type": "info", "token": token}
+    return {"task": "init", "token": token}
 
 
 """
@@ -66,3 +68,17 @@ async def game(token: str, websocket: WebSocket):
         player_id = player.lobby_id
         lobby.player_leave(player)
         await lobby.broadcast(Task(task="player_leave", lobby_id=player_id))
+
+
+@app.get("/{token}/characters")
+async def game_data(token: str):
+    return lobbies[token].image_names
+
+
+@app.get("/{token}/characters/{image}")
+async def image(token: str, image: str):
+    try:
+        if image in lobbies[token].image_names["names"]:
+            return FileResponse(abspath("./characters/" + image + ".png"))
+    except KeyError:
+        return HTTPException(404, "Image with this name doesn't exist.")

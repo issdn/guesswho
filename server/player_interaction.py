@@ -3,7 +3,8 @@ from typing import Literal
 from fastapi import WebSocket
 from pydantic import ValidationError
 from starlette.datastructures import Address
-from models import PlayerInitInfo, PlayerJoin, Task, Error, TaskType
+from models import PlayerInitInfo, PlayerJoin, PlayerJoinResponse, Task, Error, TaskType
+from image_manipulation import get_random_image_names
 
 
 async def send_error(message: str | list[ValidationError], websocket: WebSocket):
@@ -47,6 +48,7 @@ class Player:
             nickname=self.nickname,
             creator=self.creator,
             ready=self.ready,
+            lobby_id=self.lobby_id,
         )
 
     def get_task(self, task_type: TaskType) -> Task:
@@ -58,14 +60,7 @@ class SocketManager:
         self.players: list[Player] = None
         if self.players == None:
             self.players = []
-
-    def get_every_player_status(
-        self, player: Player
-    ) -> dict[Literal["player", "enemy"], object]:
-        return {
-            "player" if p == player else "enemy": p.get_info().dict()
-            for p in self.players
-        }
+        self.image_names = get_random_image_names()
 
     async def player_join(self, player: Player) -> None:
         if len(self.players) == 0:
@@ -75,20 +70,21 @@ class SocketManager:
             player.lobby_id = len(self.players) - 1
         await self.broadcast_init(player)
 
-    def player_leave(self, player: Player):
+    def player_leave(self, player: Player) -> None:
         self.players.remove(player)
 
-    async def broadcast(self, task: Task):
+    async def broadcast(self, task: Task) -> None:
         for lobby_player in self.players:
             await lobby_player.websocket.send_json(task.json())
 
     async def broadcast_init(self, player: Player) -> None:
-        players_in_lobby = {"player_id": player.lobby_id, "task": "player_join"}
-        for p in self.players:
-            players_in_lobby[p.lobby_id] = p.get_init_info().dict()
-
         for lobby_player in self.players:
-            await lobby_player.websocket.send_json(json.dumps(players_in_lobby))
+            pjr = PlayerJoinResponse(
+                task="player_join",
+                lobby_id=lobby_player.lobby_id,
+                players=[p.get_init_info() for p in self.players],
+            )
+            await lobby_player.websocket.send_json(pjr.json())
 
 
 async def handle_player_join(
@@ -103,9 +99,21 @@ async def handle_player_join(
         await send_error(e, websocket)
 
 
+async def start_game(lobby: SocketManager, player: Player):
+    for lobby_player in lobby.players:
+        if not lobby_player.ready:
+            await send_error("Not all players ready!", player.websocket)
+            return
+    if not player.creator:
+        await send_error("Game can only be started by the creator.", player.websocket)
+        return
+    await lobby.broadcast(Task(task="start"))
+
+
 async def handle_task(message: object, lobby: SocketManager, player: Player) -> None:
     try:
         task = validate_task(message)
+        print(task)
         task_type = task.task
         if task_type == "player_ready":
             player.switch_ready()
@@ -117,6 +125,8 @@ async def handle_task(message: object, lobby: SocketManager, player: Player) -> 
             for lobby_player in lobby.players:
                 lobby_player.switch_creator()
             await lobby.broadcast()
+        elif task_type == "start":
+            await start_game(lobby, player)
         else:
             await send_error("Incorrect task.", player.websocket)
     except ValidationError as e:

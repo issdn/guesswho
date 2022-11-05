@@ -7,15 +7,19 @@ import {
 } from "./socket";
 import {
     lobby,
-    my_lobby_id
+    myLobbyId,
+    enemyLobbyId,
+    token
 } from "./stores"
 
 export let ws: WebSocket;
 
+$: canStart = $lobby[$myLobbyId].ready && $lobby[$enemyLobbyId].ready
+
 const sendTask = (event: Event, taskType: string) => {
     ws.send(JSON.stringify({
         task: taskType,
-        lobby_id: $my_lobby_id
+        lobby_id: $myLobbyId
     }))
     event.preventDefault();
 }
@@ -29,16 +33,24 @@ onMount(() => {
 </script>
 
 <div class="flex flex-col gap-y-8 justify-center items-center text-secondaryYellow">
-    <p class="text-4xl">you: {$lobby[$my_lobby_id].nickname}</p>
+    <p>your token 🤐: {$token}</p>
+    <p class="text-4xl">you: {$lobby[$myLobbyId].nickname}</p>
     {#each Object.entries($lobby) as [id, player] }
-    {#if parseInt(id) !== $my_lobby_id}
+    {#if parseInt(id) !== $myLobbyId}
     <div class="flex flex-row gap-x-1">
         <p class="text-4xl">enemy: {player.nickname}</p>
-        {#if parseInt(id) !== $my_lobby_id}
         <p class="text-lg">{player.ready ? "ready" : "not ready"}</p>
-        {/if}
     </div>
     {/if}
     {/each}
-    <button on:click={(e) => sendTask(e, "player_ready")} class="uppercase bg-secondaryYellow rounded-md px-16 text-2xl text-black">{$lobby[$my_lobby_id].ready ? "ready" : "not ready"}</button>
+    <button disabled={!$lobby[$enemyLobbyId]} on:click={(e) => {sendTask(e, "player_ready");}}
+        class="uppercase bg-secondaryYellow rounded-md px-16 text-2xl text-black {!$lobby[$enemyLobbyId] ? 'cursor-not-allowed' : ''}">
+        {$lobby[$myLobbyId].ready ? "ready" : "not ready"}
+    </button>
+    {#if $lobby[$myLobbyId].creator}
+    <button on:click={(e) => sendTask(e, "start")} disabled={!canStart}
+        class="uppercase bg-secondaryYellow rounded-md px-16 text-2xl text-black {!canStart ? 'cursor-not-allowed' : ''}">
+        start!
+    </button>
+    {/if}
 </div>

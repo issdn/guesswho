@@ -1,17 +1,18 @@
 from typing import Optional, Literal, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 TaskType = Union[
     Literal["player_leave"],
     Literal["player_join"],
     Literal["set_creator"],
     Literal["player_ready"],
+    Literal["start"],
 ]
 
 
 class Task(BaseModel):
     task: TaskType
-    lobby_id: int
+    lobby_id: Optional[int]
 
 
 class PlayerJoin(BaseModel):
@@ -23,11 +24,11 @@ class PlayerInitInfo(BaseModel):
     creator: bool
     ready: bool
     nickname: str
+    lobby_id: int
 
 
 class PlayerJoinResponse(Task):
-    lobby_id: int
-    data: PlayerInitInfo
+    players: list[PlayerInitInfo]
 
 
 class Error(BaseModel):

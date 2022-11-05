@@ -1,36 +1,38 @@
-import { lobby, my_lobby_id } from './stores';
-import type { Task, PlayerJoin, Player, PlayerStore } from '../types';
+import { enemyLobbyId, lobby, myLobbyId, phase } from './stores';
+import type { Task, PlayerJoin, PlayerStore, Error } from '../types';
 
-const filterObj = (obj: object, lobby_id: number) => {
+const filterObject = (obj: object, lobby_id: number) => {
 	const filtered = Object.entries(obj).filter(([key, value]) => parseInt(key) !== lobby_id);
 	return Object.fromEntries(filtered);
 };
 
-export const handleTask = (message: Task | PlayerJoin) => {
-	let l: { [key: number]: Player } | undefined;
+export const handleTask = (message: Task | PlayerJoin | Error) => {
+	let l: PlayerStore;
 	lobby.subscribe((obj) => {
 		l = obj;
 	});
-
-	let my_id: number | undefined;
-	my_lobby_id.subscribe((id) => {
-		my_id = id;
-	});
-
-	if (message.task === 'player_join') {
-		delete message.task;
-		if (my_id === -1) {
-			my_lobby_id.set(message.player_id as number);
-		}
-		delete message.player_id;
-		lobby.set(message);
-	} else if (message.task === 'player_ready') {
-		const id = message.lobby_id;
+	if ((message as Error).type === 'error') {
+		alert((message as Error).message);
+	}
+	if ((message as PlayerJoin).task === 'player_join') {
+		(message as PlayerJoin).players.forEach((p) => {
+			lobby.set({ ...l, [p.lobby_id]: p });
+			(message as PlayerJoin).lobby_id === p.lobby_id
+				? myLobbyId.set((message as PlayerJoin).lobby_id as number)
+				: enemyLobbyId.set((message as PlayerJoin).lobby_id as number);
+		});
+	} else if ((message as Task).task === 'player_ready') {
 		lobby.set({
 			...l,
-			[id]: { ...(l as PlayerStore)[id], ready: !(l?.[id] as unknown as Player).ready }
+			[(message as Task).lobby_id]: {
+				...l[(message as Task).lobby_id],
+				ready: !l[(message as Task).lobby_id].ready
+			}
 		});
-	} else if (message.task === 'player_leave') {
-		lobby.set(filterObj(l as PlayerStore, message.lobby_id));
+	} else if ((message as Task).task === 'player_leave') {
+		lobby.set(filterObject(l, (message as Task).lobby_id));
+	} else if ((message as Task).task === 'start') {
+		console.log(message);
+		phase.set('game');
 	}
 };
