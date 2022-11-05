@@ -21,6 +21,7 @@ export const handleTask = (message: Task | PlayerJoin | Error) => {
 				? myLobbyId.set((message as PlayerJoin).lobby_id as number)
 				: enemyLobbyId.set((message as PlayerJoin).lobby_id as number);
 		});
+		phase.set('lobby');
 	} else if ((message as Task).task === 'player_ready') {
 		lobby.set({
 			...l,
@@ -32,7 +33,6 @@ export const handleTask = (message: Task | PlayerJoin | Error) => {
 	} else if ((message as Task).task === 'player_leave') {
 		lobby.set(filterObject(l, (message as Task).lobby_id));
 	} else if ((message as Task).task === 'start') {
-		console.log(message);
 		phase.set('game');
 	}
 };

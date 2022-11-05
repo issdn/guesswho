@@ -1,35 +1,15 @@
 <script lang="ts">
 import {
-    onMount
-} from "svelte"
-import {
-    handleTask
-} from "./socket";
-import {
     lobby,
     myLobbyId,
     enemyLobbyId,
     token
 } from "./stores"
 
-export let ws: WebSocket;
+import {sendTask} from "./socketStore"
 
 $: canStart = $lobby[$myLobbyId].ready && $lobby[$enemyLobbyId].ready
 
-const sendTask = (event: Event, taskType: string) => {
-    ws.send(JSON.stringify({
-        task: taskType,
-        lobby_id: $myLobbyId
-    }))
-    event.preventDefault();
-}
-
-onMount(() => {
-    ws.onmessage = (event: MessageEvent < string > ) => {
-        const message = JSON.parse(JSON.parse(event.data));
-        handleTask(message)
-    }
-})
 </script>
 
 <div class="flex flex-col gap-y-8 justify-center items-center text-secondaryYellow">
