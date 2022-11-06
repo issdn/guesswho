@@ -17,13 +17,13 @@
 </script>
 
 
+{#if $phase === ""}
 <div class="py-24 md:px-[15%] xl:px-[33%] flex flex-col w-full items-center gap-y-16">
     <div class="text-secondaryYellow">
         <h1 class="text-9xl">Guess Who?</h1>
         <p class="text-2xl float-right -rotate-6">The Game</p>
     </div>
     <div class="text-2xl flex flex-col gap-y-8 w-full">
-        {#if $phase === ""}
             <div class="flex flex-row border-2 border-secondaryYellow rounded-full">
                 <p class="h-[full] -ml-1 bg-secondaryYellow px-4 py-2 rounded-l-full">name: </p>
                 <div class="h-full py-2 pl-4 pr-8 w-full">
@@ -43,10 +43,11 @@
                     Join 
                 </button>
             </div>      
-        {:else if $phase === "lobby"}
-            <Lobby/>
-        {:else if $phase === "game"}
-            <Game/>
-        {/if}
+        </div>
     </div>
-</div>
+{:else if $phase === "lobby"}
+    <Lobby/>
+{:else if $phase === "game"}
+    <Game/>
+{/if}
+    

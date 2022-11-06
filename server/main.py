@@ -4,12 +4,7 @@ from fastapi.responses import FileResponse
 import secrets
 from os.path import abspath
 
-from player_interaction import (
-    SocketManager,
-    handle_task,
-    send_error,
-    handle_player_join,
-)
+from managers import send_error, Lobby
 
 from models import Task
 
@@ -25,13 +20,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-lobbies: dict[str, SocketManager] = {}
+lobbies: dict[str, Lobby] = {}
 
 
 @app.post("/newgame")
 async def new_game():
     token = secrets.token_urlsafe(8)
-    lobbies[token] = SocketManager()
+    lobbies[token] = Lobby()
     return {"task": "init", "token": token}
 
 
@@ -44,7 +39,7 @@ error :: always sent by server to a single user
 
 
 @app.websocket("/{token}/lobby/ws")
-async def game(token: str, websocket: WebSocket):
+async def lobby(token: str, websocket: WebSocket):
     """
     :: receive action
     -> handle action by type
@@ -56,11 +51,11 @@ async def game(token: str, websocket: WebSocket):
     try:
         if len(lobby.players) < 2:
             initial_data = await websocket.receive_json()
-            player = await handle_player_join(initial_data, lobby, websocket)
+            player = await lobby.handle_player_join(initial_data, websocket)
 
             while True:
                 message = await websocket.receive_json()
-                await handle_task(message, lobby, player)
+                await lobby.handle_task(message, player)
         else:
             await send_error("Lobby is full.", websocket)
             await websocket.close(code=1007)

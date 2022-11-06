@@ -4,7 +4,6 @@ from pydantic import BaseModel
 TaskType = Union[
     Literal["player_leave"],
     Literal["player_join"],
-    Literal["set_creator"],
     Literal["player_ready"],
     Literal["start"],
 ]
