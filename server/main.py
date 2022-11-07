@@ -4,9 +4,10 @@ from fastapi.responses import FileResponse
 import secrets
 from os.path import abspath
 
-from managers import send_error, Lobby
+from managers.lobby import Lobby
 
 from models import Task
+from managers.game import Game
 
 app = FastAPI()
 
@@ -21,6 +22,7 @@ app.add_middleware(
 )
 
 lobbies: dict[str, Lobby] = {}
+games: dict[str, Game] = {}
 
 
 @app.post("/newgame")
@@ -49,16 +51,12 @@ async def lobby(token: str, websocket: WebSocket):
 
     await websocket.accept()
     try:
-        if len(lobby.players) < 2:
-            initial_data = await websocket.receive_json()
-            player = await lobby.handle_player_join(initial_data, websocket)
-
-            while True:
-                message = await websocket.receive_json()
-                await lobby.handle_task(message, player)
-        else:
-            await send_error("Lobby is full.", websocket)
-            await websocket.close(code=1007)
+        initial_data = await websocket.receive_json()
+        player = await lobby.handle_player_join(initial_data, websocket)
+        await lobby.main_loop(player)
+        game = Game(lobby.players)
+        games[token] = game
+        await game.main_loop(player)
     except WebSocketDisconnect:
         player_id = player.lobby_id
         lobby.player_leave(player)
@@ -67,13 +65,13 @@ async def lobby(token: str, websocket: WebSocket):
 
 @app.get("/{token}/characters")
 async def game_data(token: str):
-    return lobbies[token].image_names
+    return games[token].image_names
 
 
 @app.get("/{token}/characters/{image}")
 async def image(token: str, image: str):
     try:
-        if image in lobbies[token].image_names["names"]:
+        if image in games[token].image_names["names"]:
             return FileResponse(abspath("./characters/" + image + ".png"))
     except KeyError:
         return HTTPException(404, "Image with this name doesn't exist.")
