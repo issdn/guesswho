@@ -3,11 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import secrets
 from os.path import abspath
-
-from managers.lobby import Lobby
-
-from models import Task
+from managers.phases import LobbyPhase, GamePrepPhase, GamePhase, PlayersJoinPhase
+from managers.player import Player
 from managers.game import Game
+
+from models import Error, Task
 
 app = FastAPI()
 
@@ -21,14 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-lobbies: dict[str, Lobby] = {}
 games: dict[str, Game] = {}
 
 
 @app.post("/newgame")
 async def new_game():
     token = secrets.token_urlsafe(8)
-    lobbies[token] = Lobby()
+    games[token] = Game(phases=(PlayersJoinPhase, LobbyPhase, GamePrepPhase, GamePhase))
     return {"task": "init", "token": token}
 
 
@@ -40,27 +39,28 @@ error :: always sent by server to a single user
 """
 
 
-@app.websocket("/{token}/lobby/ws")
-async def lobby(token: str, websocket: WebSocket):
+@app.websocket("/{token}/game/ws")
+async def game(token: str, websocket: WebSocket):
     """
     :: receive action
     -> handle action by type
     -> dispatch
     """
-    lobby = lobbies[token]
+    game = games[token]
 
     await websocket.accept()
+    if len(game.players_manager.players) >= 2:
+        await game.send_error(Error("Lobby is full!"), websocket)
+        return
+    else:
+        player = Player("anonymous", websocket)
+
     try:
-        initial_data = await websocket.receive_json()
-        player = await lobby.handle_player_join(initial_data, websocket)
-        await lobby.main_loop(player)
-        game = Game(lobby.players)
-        games[token] = game
         await game.main_loop(player)
     except WebSocketDisconnect:
-        player_id = player.lobby_id
-        lobby.player_leave(player)
-        await lobby.broadcast(Task(task="player_leave", lobby_id=player_id))
+        player_id = player.game_id
+        game.player_manager.player_leave(player)
+        await game.broadcast(Task(task="player_leave", game_id=player_id))
 
 
 @app.get("/{token}/characters")

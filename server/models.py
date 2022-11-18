@@ -5,13 +5,14 @@ TaskType = Union[
     Literal["player_leave"],
     Literal["player_join"],
     Literal["player_ready"],
-    Literal["start"],
+    Literal["pick_starting_character"],
+    Literal["start_game"],
 ]
 
 
 class Task(BaseModel):
     task: TaskType
-    lobby_id: Optional[int]
+    game_id: Optional[int]
 
 
 class PlayerJoin(BaseModel):
@@ -23,7 +24,7 @@ class PlayerInitInfo(BaseModel):
     creator: bool
     ready: bool
     nickname: str
-    lobby_id: int
+    game_id: int
 
 
 class PlayerJoinResponse(Task):
@@ -34,3 +35,12 @@ class Error(BaseModel):
     type: Literal["error"] = "error"
     message: str
     field: Optional[str] = None
+
+
+class StartingCharacterPick(Task):
+    character_name: str
+
+
+class QuestionAsk(Task):
+    question: str
+    answer: Optional[str]

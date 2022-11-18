@@ -1,6 +1,8 @@
 import { writable } from 'svelte/store';
-import { handleTask } from './socket';
-import { token, phase, nickname, myLobbyId } from './stores';
+import { handleGameTask, handleTask } from './socket';
+import { token, phase, nickname, myGameId } from './stores';
+
+let _phase: string;
 
 let _token: string;
 token.subscribe((t) => (_token = t));
@@ -10,8 +12,8 @@ nickname.subscribe((n) => {
 	_nickname = n;
 });
 
-let _lobby_id: number;
-myLobbyId.subscribe((id) => (_lobby_id = id));
+let _game_id: number;
+myGameId.subscribe((id) => (_game_id = id));
 
 const socket = writable();
 
@@ -19,7 +21,7 @@ let _socket: WebSocket;
 socket.subscribe((ws) => (_socket = ws as WebSocket));
 
 export const joinSocket = () => {
-	socket.set(new WebSocket(`ws://localhost:8000/${_token}/lobby/ws`));
+	socket.set(new WebSocket(`ws://localhost:8000/${_token}/game/ws`));
 	_socket.onopen = (event: Event) => {
 		_socket.send(JSON.stringify({ task: 'player_join', nickname: _nickname }));
 	};
@@ -28,11 +30,17 @@ export const joinSocket = () => {
 		handleTask(message);
 	};
 };
-export const sendTask = (event: Event, taskType: string) => {
+
+export const sendTask = (
+	event: Event,
+	taskType: string,
+	other: Record<string, string | number | boolean> = {}
+) => {
 	_socket.send(
 		JSON.stringify({
 			task: taskType,
-			lobby_id: _lobby_id
+			game_id: _game_id,
+			...other
 		})
 	);
 	event.preventDefault();

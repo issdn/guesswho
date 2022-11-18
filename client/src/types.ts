@@ -2,17 +2,25 @@ export type Player = {
 	nickname: string;
 	creator: boolean;
 	ready: boolean;
-	lobby_id: number;
+	game_id: number;
 };
 
 export type Task = {
-	task: 'player_ready' | 'player_leave' | 'set_creator' | 'start';
-	lobby_id: number;
+	task: 'player_ready' | 'player_leave' | 'set_creator' | 'start_game';
+	game_id: number;
+};
+
+export type GameTask = {
+	task: 'pick_starting_character';
+	game_id: number;
+	character_name?: string;
+	question?: string;
+	answer?: string;
 };
 
 export interface PlayerJoin {
 	task?: 'player_join';
-	lobby_id?: number;
+	game_id?: number;
 	players: [Player];
 }
 
