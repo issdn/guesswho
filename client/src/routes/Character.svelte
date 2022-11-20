@@ -5,7 +5,8 @@ import {
 } from "./socketStore";
 import {
     token,
-    pickedCharacter
+    pickedCharacter,
+    baseUrl
 } from "./stores";
 
 export let darken: (value: boolean) => void;
@@ -15,7 +16,7 @@ const prettyCharacterName: string = characterName.split("_").join(" ")
 let isFlipped: boolean = false
 
 const fetchImage = (async () => {
-    const response = await fetch(`http://127.0.0.1:8000/${$token}/characters/${characterName}`)
+    const response = await fetch(`${$baseUrl}/${$token}/characters/${characterName}`)
     return await response
 })()
 </script>
@@ -33,15 +34,15 @@ const fetchImage = (async () => {
             character_name: characterName}); 
             darken(false);
         }}
-        class="w-full h-full p-2 rounded-xl preserve3d bg-secondaryYellow duration-500 cursor-pointer border-2 border-black hover:-translate-y-3"
+        class="w-full h-full p-2 rounded-xl preserve3d bg-secondaryYellow duration-500 cursor-pointer border-4 border-[#FF8900] hover:-translate-y-3"
     >
         <CharacterInside characterName={prettyCharacterName} url={data.url}/>
     </div>
     {:else}
     <div 
         on:keydown={()=>{}}
-        on:click={() => {isFlipped = !isFlipped}}
-        class="w-full h-full p-2 rounded-xl preserve3d bg-secondaryYellow duration-500 cursor-pointer border-2 border-black {isFlipped ? 'rotate-y' : ''}"
+        on:click={() => {isFlipped = !isFlipped;}}
+        class="w-full h-full p-2 rounded-xl preserve3d bg-secondaryYellow duration-500 cursor-pointer border-4 border-[#ff9900] {isFlipped ? 'flip-y' : ''}"
     >
         <CharacterInside characterName={prettyCharacterName} url={data.url}/>
     </div>

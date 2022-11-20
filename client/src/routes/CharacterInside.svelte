@@ -6,7 +6,7 @@
 <div class="w-full h-full transition-transform duration-1000 preserve3d">
     <div class="absolute bg-secondaryYellow backface-hidden rotate-y-0">
         <img src={url} alt="character" class="border-2 border-black">
-        <p class="text-xl text-center mt-4">{characterName}</p>
+        <p class="text-xl text-center mt-2">{characterName}</p>
     </div>
     <div class="absolute h-full w-full backface-hidden bg-secondaryYellow flip-y">
         <div class="relative h-full w-full">

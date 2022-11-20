@@ -11,10 +11,14 @@ export type Task = {
 };
 
 export type GameTask = {
-	task: 'pick_starting_character';
-	game_id: number;
 	character_name?: string;
-	question?: string;
+	game_id: number;
+	task: 'pick_starting_character';
+};
+
+export type QuestionAsk = {
+	task: 'ask_question' | 'answer_question';
+	question: string;
 	answer?: string;
 };
 

@@ -5,27 +5,20 @@ from models import (
     QuestionAsk,
     StartingCharacterPick,
     Task,
+    TaskTypes,
 )
-from errors import ServerException
+from errors import ServerException, get_error
+from managers.communication import Broadcast
 
 
 class BasePhase:
     """
     Description
 
-    This class manages tasks (functions) that process messages from the socket.
+    This class manages tasks (method) that process messages from the socket.
     To divide tasks into separate phases - inherit this class.
-    Eg.: tasks from phase<Lobby(BasePhase)> will take players_manager<PlayerManager> and player<Player> object as parameters
-        and phase<Game(BasePhase)> will additionally take task<Task> as parameters.
-        Thus the actual calling of the tasks (functions) will require less logic because the functions are already subdivided.
 
-    (?) Class for tasks (functions) that process messages sent by the user through the websocket.
-        The class gathers all functions and puts them in a dictionary with task name as string key
-        and tuple of function pointer (callable) and integer key for broadcast function that the task will be sent over through.
-        Functions can return only an error instanciated from an Error or a ValidationError class.
-
-    The idea behind this design is taken from Spring Boot Persistence JPA where tables, cols etc. are automatically created from a POJO,
-    from attributes with special decorators. No decorators in this case because it seems to be too small for such complex system..
+    To define a task you need to create a
 
     (!) Therefore special naming is needed for every function:
         - standard underscore-separated naming, like: pick_starting_character and
@@ -35,13 +28,17 @@ class BasePhase:
     TL;DR (not full though) - method name eg.: pick_starting_character_2, where pick_starting_character is the name and _2 is the number of a broadcast function.
     """
 
-    def __init__(self, players_manager):
-        self.tasks: dict[callable, int] = self._get_tasks()
+    def __init__(self, players_manager, end_phase: callable, back_to_lobby: callable):
+        self.tasks: dict[str, tuple[callable, int]] = self._get_tasks()
         self.name = self.__class__.__name__.lower()
-        self.running = False
         self.players_manager = players_manager
+        self.end_phase = end_phase
+        self.back_to_lobby = back_to_lobby
 
-    def _get_tasks(self) -> dict[callable, int]:
+    def _get_tasks(self) -> dict[str, tuple[callable, int]]:
+        """
+        This function takes all the public methods
+        """
         tasks = {}
         for t in dir(self):
             if not t.startswith("_"):
@@ -55,62 +52,76 @@ class BasePhase:
                 tasks[clear_name] = (getattr(self, t), broadcast_function_number)
         return tasks
 
+    def player_leave(self, player: Player, task: Task) -> None:
+        self.players_manager.player_leave(player)
+        self.back_to_lobby()
+
 
 class PlayersJoinPhase(BasePhase):
-    def __init__(self, players_manager):
-        super().__init__(players_manager)
+    def __init__(self, players_manager, end_phase, back_to_lobby):
+        super().__init__(players_manager, end_phase, back_to_lobby)
         self.validator = PlayerJoin
 
     def player_join_3(self, player: Player, task: PlayerJoin) -> None:
         player.set_nickname(task.nickname)
         self.players_manager.add_player(player)
-        self.running = False
-        print(self.running)
+        if len(self.players_manager.players) == 2:
+            self.end_phase()
 
 
 class LobbyPhase(BasePhase):
-    def __init__(self, players_manager):
-        super().__init__(players_manager)
+    def __init__(self, players_manager, end_phase, back_to_lobby):
+        super().__init__(players_manager, end_phase, back_to_lobby)
         self.validator = Task
 
     def player_ready(self, player: Player, task: Task) -> None:
         player.switch_ready()
 
-    def player_leave(self, player: Player, task: Task) -> None:
-        self.players_manager.player_leave(player)
-
     def start_game(self, player: Player, task: Task):
         try:
             self.players_manager.can_start_game(player)
+            self.end_phase()
         except (ServerException, ValidationError) as e:
             raise e
 
 
 class GamePrepPhase(BasePhase):
-    def __init__(self, players_manager):
-        super().__init__(players_manager)
+    def __init__(self, players_manager, end_phase, back_to_lobby):
+        super().__init__(players_manager, end_phase, back_to_lobby)
         self.validator = StartingCharacterPick
 
     def pick_starting_character_2(
         self, player: Player, task: StartingCharacterPick
     ) -> None:
-        if task.character_name in self.players_manager.image_names:
-            player.character = task.character_name
-
-    def player_leave(self, player: Player, task: Task) -> None:
-        self.players_manager.player_leave(player)
+        print(player)
+        print(task.character_name)
+        print(task.character_name in self.players_manager.image_names)
+        print(self.players_manager.image_names)
+        if task.character_name in self.players_manager.image_names["names"]:
+            player.set_character(task.character_name)
+        if self.players_manager.all_playes_characters_picked():
+            self.end_phase()
 
 
 class GamePhase(BasePhase):
-    def __init__(self, players_manager):
-        super().__init__(players_manager)
+    def __init__(self, players_manager, end_phase, back_to_lobby):
+        super().__init__(players_manager, end_phase, back_to_lobby)
         self.validator = QuestionAsk
 
-    def send_question_1(player: Player, task: QuestionAsk) -> None:
-        pass
+    def ask_question_1(self, player: Player, task: QuestionAsk) -> None:
+        if self.players_manager.currently_asking_player:
+            if player.game_id == self.players_manager.currently_asking_player:
+                self.players_manager.change_currently_asking_player()
+            else:
+                raise get_error("INVALID_ASKING_PLAYER")
+        else:
+            raise get_error("ASKING_PLAYER_NOT_SPECIFIED")
 
-    def answer_question_1(player: Player, task: QuestionAsk) -> None:
-        pass
-
-    def player_leave(self, player: Player, task: Task) -> None:
-        self.players_manager.player_leave(player)
+    def answer_question_1(self, player: Player, task: QuestionAsk) -> None:
+        if self.players_manager.currently_asking_player:
+            if player.game_id != self.players_manager.currently_asking_player:
+                self.players_manager.change_currently_asking_player()
+            else:
+                raise get_error("INVALID_ASKING_PLAYER")
+        else:
+            raise get_error("ASKING_PLAYER_NOT_SPECIFIED")

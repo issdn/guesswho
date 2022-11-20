@@ -2,6 +2,8 @@ import { writable } from 'svelte/store';
 import { handleGameTask, handleTask } from './socket';
 import { token, phase, nickname, myGameId } from './stores';
 
+const baseSocketUrl = 'ws://localhost:8000';
+
 let _phase: string;
 
 let _token: string;
@@ -21,7 +23,7 @@ let _socket: WebSocket;
 socket.subscribe((ws) => (_socket = ws as WebSocket));
 
 export const joinSocket = () => {
-	socket.set(new WebSocket(`ws://localhost:8000/${_token}/game/ws`));
+	socket.set(new WebSocket(`${baseSocketUrl}/${_token}/game/ws`));
 	_socket.onopen = (event: Event) => {
 		_socket.send(JSON.stringify({ task: 'player_join', nickname: _nickname }));
 	};

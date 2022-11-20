@@ -56,22 +56,27 @@ async def game(token: str, websocket: WebSocket):
         player = Player("anonymous", websocket)
 
     try:
-        await game.main_loop(player)
+        await game.player_loop(player)
     except WebSocketDisconnect:
         player_id = player.game_id
-        game.player_manager.player_leave(player)
+        game.players_manager.player_leave(player)
         await game.broadcast(Task(task="player_leave", game_id=player_id))
 
 
 @app.get("/{token}/characters")
 async def game_data(token: str):
-    return games[token].image_names
+    return games[token].players_manager.image_names
 
 
 @app.get("/{token}/characters/{image}")
 async def image(token: str, image: str):
     try:
-        if image in games[token].image_names["names"]:
+        if image in games[token].players_manager.image_names["names"]:
             return FileResponse(abspath("./characters/" + image + ".png"))
     except KeyError:
         return HTTPException(404, "Image with this name doesn't exist.")
+
+
+@app.get("/{token}/starting_player")
+async def starting_player(token: str):
+    return {"starting_player_id": games[token].players_manager.get_starting_player()}

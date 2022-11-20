@@ -1,17 +1,16 @@
-from typing import Optional, Literal, Union
+from typing import Optional, Literal
 from pydantic import BaseModel
 
-TaskType = Union[
-    Literal["player_leave"],
-    Literal["player_join"],
-    Literal["player_ready"],
-    Literal["pick_starting_character"],
-    Literal["start_game"],
+TaskTypes = Literal[
+    "player_leave",
+    "player_ready",
+    "pick_starting_character",
+    "start_game",
 ]
 
 
 class Task(BaseModel):
-    task: TaskType
+    task: TaskTypes
     game_id: Optional[int]
 
 
@@ -27,7 +26,9 @@ class PlayerInitInfo(BaseModel):
     game_id: int
 
 
-class PlayerJoinResponse(Task):
+class PlayerJoinResponse(BaseModel):
+    task: Literal["player_join"]
+    game_id: int
     players: list[PlayerInitInfo]
 
 
@@ -42,5 +43,6 @@ class StartingCharacterPick(Task):
 
 
 class QuestionAsk(Task):
+    task: Literal["ask_question", "answer_question"]
     question: str
     answer: Optional[str]

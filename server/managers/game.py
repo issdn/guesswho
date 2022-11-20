@@ -7,7 +7,6 @@ from models import (
     PlayerJoinResponse,
     Task,
 )
-from image_manipulation import get_random_image_names
 from managers.phases import BasePhase
 from errors import CriticalServerException, ServerException
 from models import Error
@@ -46,31 +45,44 @@ class Broadcast:
 class Game:
     def __init__(self, phases: tuple[BasePhase]) -> None:
         self.players_manager: PlayersManager = PlayersManager()
-        self.broadcast_functions = Broadcast.methods
-        self.phases = tuple([phase(self.players_manager) for phase in phases])
-        self.image_names: dict[Literal["names"], list[str]] = get_random_image_names()
+        self.phases = tuple(
+            [
+                phase(self.players_manager, self.end_phase, self.back_to_lobby)
+                for phase in phases
+            ]
+        )
+        self.current_phase_position: int = 0
 
-    async def main_loop(self, player: Player) -> None:
+    def end_phase(self):
+        self.current_phase_position += 1
+        print(self.phases[self.current_phase_position])
+
+    def back_to_lobby(self):
+        self.current_phase_position = 0
+
+    async def player_loop(self, player: Player):
         try:
-            for phase in self.phases:
-                phase.running = True
-                while phase.running:
-                    message = await player.websocket.receive_json()
-                    await self._handle_message(message, player, phase)
+            while True:
+                message = await player.websocket.receive_json()
+                await self._handle_message(message, player)
         except (ValidationError, ServerException) as e:
             await self.send_error(e, player.websocket)
 
-    async def _handle_message(self, message: object, player: Player, phase) -> None:
-        task = phase.validator(**message)
-        task_type = task.task
+    async def _handle_message(self, message: object, player: Player) -> None:
         try:
+            phase = self.phases[self.current_phase_position]
+            print(message)
+            print(phase)
+            print(phase.validator)
+            task = phase.validator(**message)
+            task_type = task.task
             phase.tasks[task_type][0](
                 player=player,
                 task=task,
             )
         except (ServerException, ValidationError) as e:
             raise e
-        await self.broadcast_functions[phase.tasks[task_type][1]](
+        await Broadcast.methods[phase.tasks[task_type][1]](
             player=player, task=task, players=self.players_manager.players
         )
 
