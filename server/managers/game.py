@@ -55,7 +55,6 @@ class Game:
 
     def end_phase(self):
         self.current_phase_position += 1
-        print(self.phases[self.current_phase_position])
 
     def back_to_lobby(self):
         self.current_phase_position = 0
@@ -69,22 +68,22 @@ class Game:
             await self.send_error(e, player.websocket)
 
     async def _handle_message(self, message: object, player: Player) -> None:
-        try:
-            phase = self.phases[self.current_phase_position]
-            print(message)
-            print(phase)
-            print(phase.validator)
-            task = phase.validator(**message)
-            task_type = task.task
-            phase.tasks[task_type][0](
-                player=player,
-                task=task,
-            )
-        except (ServerException, ValidationError) as e:
-            raise e
+        phase = self.phases[self.current_phase_position]
+        task = phase.validator(**message)
+        task_type = task.task
+        phase.tasks[task_type][0](
+            player=player,
+            task=task,
+        )
         await Broadcast.methods[phase.tasks[task_type][1]](
             player=player, task=task, players=self.players_manager.players
         )
+        if phase.server_message:
+            await Broadcast.methods[phase.server_message[1]](
+                player=player,
+                task=phase.server_message[0],
+                players=self.players_manager.players,
+            )
 
     async def send_error(
         self,

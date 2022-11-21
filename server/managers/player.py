@@ -46,20 +46,16 @@ class PlayersManager:
     def __init__(self) -> None:
         self.players: list[Player] = []
         self.image_names: dict[Literal["names"], list[str]] = get_random_image_names()
-        self.loop_running = False
         self.currently_asking_player = None
 
     def change_currently_asking_player(self):
         for lobby_player in self.players:
             if lobby_player.game_id != self.currently_asking_player:
                 self.currently_asking_player = lobby_player.game_id
+                return
 
-    def get_starting_player(self):
-        if not self.currently_asking_player:
-            player = random.choice(self.players)
-            self.currently_asking_player = player.game_id
-            return self.currently_asking_player
-        return self.currently_asking_player
+    def draw_starting_player(self):
+        self.currently_asking_player = random.choice(self.players).game_id
 
     def remove_player(self, player: Player) -> None:
         self.players.remove(player)

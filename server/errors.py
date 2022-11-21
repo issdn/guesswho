@@ -12,10 +12,3 @@ errors_by_code = {
     "ASKING_PLAYER_NOT_SPECIFIED": "Server error.",
     "INVALID_ASKING_PLAYER": "It's enemy's turn to ask.",
 }
-
-
-def get_error(key: str):
-    try:
-        return ServerException(errors_by_code[key])
-    except KeyError:
-        print(f"WARNING: Wrong error key.: {key}")

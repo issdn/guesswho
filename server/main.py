@@ -59,7 +59,8 @@ async def game(token: str, websocket: WebSocket):
         await game.player_loop(player)
     except WebSocketDisconnect:
         player_id = player.game_id
-        game.players_manager.player_leave(player)
+        game.players_manager.remove_player(player)
+        game.back_to_lobby()
         await game.broadcast(Task(task="player_leave", game_id=player_id))
 
 
@@ -79,4 +80,5 @@ async def image(token: str, image: str):
 
 @app.get("/{token}/starting_player")
 async def starting_player(token: str):
-    return {"starting_player_id": games[token].players_manager.get_starting_player()}
+    print(games[token].players_manager.currently_asking_player)
+    return {"starting_player_id": games[token].players_manager.currently_asking_player}

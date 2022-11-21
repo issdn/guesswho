@@ -1,4 +1,13 @@
-import { enemyGameId, game, myGameId, phase, pickedCharacter, question, asking } from './stores';
+import {
+	enemyGameId,
+	game,
+	myGameId,
+	phase,
+	pickedCharacter,
+	question,
+	asking,
+	answer
+} from './stores';
 import type { Task, PlayerJoin, PlayerStore, Error, GameTask, QuestionAsk } from '../types';
 
 const filterObject = (obj: object, game_id: number) => {
@@ -47,9 +56,14 @@ export const handleGameTask = (message: GameTask | QuestionAsk) => {
 	if ((message as GameTask).task === 'pick_starting_character') {
 		pickedCharacter.set((message as GameTask).character_name as string);
 	} else if ((message as QuestionAsk).task === 'ask_question') {
-		question.set((message as QuestionAsk).question);
+		question.set((message as QuestionAsk).question as string);
 	} else if ((message as QuestionAsk).task === 'answer_question') {
-		asking.set(true);
+		answer.set((message as QuestionAsk).answer as 'yes' | 'no' | 'idk');
+		if ((message as QuestionAsk).answer === 'yes' || (message as QuestionAsk).answer === 'no') {
+			let _asking;
+			asking.subscribe((a) => (_asking = a));
+			asking.set(!_asking);
+		}
 	}
 };
 

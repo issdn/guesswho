@@ -18,8 +18,8 @@ export type GameTask = {
 
 export type QuestionAsk = {
 	task: 'ask_question' | 'answer_question';
-	question: string;
-	answer?: string;
+	question?: string;
+	answer?: 'yes' | 'no' | 'idk';
 };
 
 export interface PlayerJoin {

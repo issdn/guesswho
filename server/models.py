@@ -6,6 +6,7 @@ TaskTypes = Literal[
     "player_ready",
     "pick_starting_character",
     "start_game",
+    "characters_picked",
 ]
 
 
@@ -44,5 +45,5 @@ class StartingCharacterPick(Task):
 
 class QuestionAsk(Task):
     task: Literal["ask_question", "answer_question"]
-    question: str
-    answer: Optional[str]
+    question: Optional[str]
+    answer: Optional[Literal["yes", "no", "idk"]]
