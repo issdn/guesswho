@@ -11,29 +11,14 @@ import {
     baseUrl,
     myGameId,
     asking,
-    question,
-    answer
 } from "./stores"
-import Modal from "./Modal.svelte";
-import {
-    sendTask
-} from "./socketStore";
-
-let isAskModalOpen = false
-const setAskModalOpen = () => {
-    isAskModalOpen = true
-}
-const setAskModalClose = () => {
-    isAskModalOpen = false
-}
+import GameInfoBar from "./GameInfoBar.svelte";
 
 /* Darken the screen when choosing a character. */
 let darkened: boolean = false
 const darken = (value: boolean) => darkened = value
 
 let imageNames: [string];
-
-let newQuestion: string;
 
 onMount(async () => {
     await fetch(`${$baseUrl}/${$token}/characters`)
@@ -45,31 +30,9 @@ onMount(async () => {
         .then(data => {(parseInt(data.starting_player_id)) === $myGameId ? asking.set(true) : asking.set(false); console.log(data.starting_player_id); console.log($myGameId)})
 })
 </script>
-
-<Modal modalOpen={isAskModalOpen} closeModal={setAskModalClose}>
-    <h1 class="text-black text-4xl text-center">Ask a question</h1>
-    <textarea bind:value={newQuestion} class="h-full resize-none p-2 text-xl rounded-xl"/>
-        <div class="w-full flex flex-row justify-between">
-            <button on:click={(e) => {sendTask(e, "ask_question", {question: newQuestion})}} class="px-8 py-1 bg-primaryRed rounded-xl">Ask</button>
-            <button on:click={setAskModalClose} class="px-8 py-1 border-2 border-primaryRed rounded-xl text-primaryRed">Cancel</button>
-        </div>
-        </Modal>
         {#if imageNames}
         <div class="w-full h-full sm:px-12 md:px-24 pt-8 flex flex-col gap-16">
-            <div class="w-full h-32 flex flex-row">
-                <div class="bg-secondaryYellow w-48 h-full rounded-xl">10:20</div>
-                <div class="flex flex-row gap-2 items-center">
-                    {#if $asking}
-                    <button on:click={setAskModalOpen} class="bg-secondaryYellow h-fit px-4 py-1 rounded-md">Ask a question</button>
-                    {:else}
-                    <button on:click={(e) => {sendTask(e, "answer_question", {answer: "yes"})}} class="bg-secondaryYellow px-4 py-1 h-fit rounded-md">Yes!</button>
-                    <button on:click={(e) => {sendTask(e, "answer_question", {answer: "no"})}} class="bg-secondaryYellow px-4 py-1 h-fit rounded-md">No!</button>
-                    <button on:click={(e) => {sendTask(e, "answer_question", {answer: "idk"})}} class="bg-secondaryYellow px-4 py-1 h-fit rounded-md">I don't understand.</button>
-                    {/if}
-                </div>
-                <p>question: {$question}</p>
-                <p>answer: {$answer}</p>
-            </div>
+            <GameInfoBar/>
             <div class="w-full h-full flex flex-row gap-2 flex-wrap justify-center rounded-xl">
                 {#each imageNames as name}
                 <Character characterName={name} darken={darken}/>

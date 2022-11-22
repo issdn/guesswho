@@ -11,12 +11,15 @@ from errors import ServerException, errors_by_code
 
 class BasePhase:
     """
-    Description
+    Phases are main pieces of logic here.
+    A whole life cycle is chronologically divided into phases
+    and every phase is divided into asynchronous tasks.
+    Every phase has it's own validator(model) for tasks.
 
-    This class manages tasks (method) that process messages from the socket.
-    To divide tasks into separate phases - inherit this class.
+    So, during PlayersJoinPhase the client can only send player_join task,
+    which structure is defined by PlayerJoin validator.
 
-    To define a task you need to create a
+    To end a phase, use end_phase() method.
 
     Therefore special naming is needed for every function:
         - standard underscore-separated naming, like: pick_starting_character and
@@ -60,6 +63,10 @@ class PlayersJoinPhase(BasePhase):
         self.validator = PlayerJoin
 
     def player_join_3(self, player: Player, task: PlayerJoin) -> None:
+        """
+        Set player's nickname taken from the task, add player to players_manager<PlayersManager>.
+        If the lobby is full (2 players), end the phase.
+        """
         player.set_nickname(task.nickname)
         self.players_manager.add_player(player)
         if len(self.players_manager.players) == 2:

@@ -4,7 +4,7 @@
 
 @layer base{
     html, body, #app{
-        background: #FF1A29;
+        background: #EE5454;
         min-height: 100%;
         margin: 0; padding: 0;
         box-sizing: border-box;

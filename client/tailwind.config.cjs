@@ -48,10 +48,33 @@ module.exports = {
   theme: {
     extend: {
       colors:{
-        primaryRed: "#FF1A29",
-        secondaryYellow: "#FFE700",
-        primaryBlue: "#8761FF",
-        secondaryPink: "#FF61D9"
+        salsa: "#EE5454",
+        mikado: "#FFC510",
+        safety: "#F6DB35",
+        un: "#4C94F6",
+        neoblue: "#4C69F6"
+      },
+      keyframes: {
+        dots: {
+          '0%': {
+            content: ''
+        },
+        '25%': {
+            content: '.'
+        },
+        '50%': {
+            content: '..'
+        },
+        '75%': {
+            content: '...'
+        },
+        '100%': {
+            content: ''
+        },
+        }
+      },
+      animation: {
+        dots: "dots steps(1, end) 1s infinite"
       }
     },
   },

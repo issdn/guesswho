@@ -69,6 +69,8 @@ class Game:
 
     async def _handle_message(self, message: object, player: Player) -> None:
         phase = self.phases[self.current_phase_position]
+        print(message)
+        print(phase.name)
         task = phase.validator(**message)
         task_type = task.task
         phase.tasks[task_type][0](

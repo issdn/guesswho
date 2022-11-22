@@ -21,7 +21,7 @@ const fetchImage = (async () => {
 })()
 </script>
 
-<div class="min-w-[8rem] sm:w-32 min-h-[12rem] hover:z-10">
+<div class="min-w-[8rem] sm:w-40 min-h-[11.5rem] sm:min-h-[13.5rem] hover:z-10">
     {#await fetchImage}
     <p>loading...</p>
     {:then data}
@@ -34,7 +34,7 @@ const fetchImage = (async () => {
             character_name: characterName}); 
             darken(false);
         }}
-        class="w-full h-full p-2 rounded-xl preserve3d bg-secondaryYellow duration-500 cursor-pointer border-4 border-[#FF8900] hover:-translate-y-3"
+        class="w-full h-full p-2 rounded-xl preserve3d bg-safety duration-500 cursor-pointer border-4 border-[#FF8900] hover:-translate-y-3"
     >
         <CharacterInside characterName={prettyCharacterName} url={data.url}/>
     </div>
@@ -42,7 +42,7 @@ const fetchImage = (async () => {
     <div 
         on:keydown={()=>{}}
         on:click={() => {isFlipped = !isFlipped;}}
-        class="w-full h-full p-2 rounded-xl preserve3d bg-secondaryYellow duration-500 cursor-pointer border-4 border-[#ff9900] {isFlipped ? 'flip-y' : ''}"
+        class="w-full h-full p-2 rounded-xl preserve3d bg-safety duration-500 cursor-pointer border-4 border-[#ff9900] {isFlipped ? 'flip-y' : ''}"
     >
         <CharacterInside characterName={prettyCharacterName} url={data.url}/>
     </div>
