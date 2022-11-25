@@ -1,6 +1,7 @@
 from pydantic import ValidationError
 from managers.player import Player
 from models import (
+    GameEnd,
     PlayerJoin,
     QuestionAsk,
     StartingCharacterPick,
@@ -30,7 +31,7 @@ class BasePhase:
     def __init__(self, players_manager, end_phase: callable, back_to_lobby: callable):
         self.tasks: dict[str, tuple[callable, int]] = self._get_tasks()
         self.name = self.__class__.__name__.lower()
-        self.server_message = None
+        self.final_message = None
         self.players_manager = players_manager
         self.end_phase = end_phase
         self.back_to_lobby = back_to_lobby
@@ -104,7 +105,7 @@ class GamePrepPhase(BasePhase):
             characters_picked_task = Task(
                 task="characters_picked", game_id=player.game_id
             )
-            self.server_message = (characters_picked_task, 0)
+            self.final_message = (characters_picked_task, 0)
             self.end_phase()
 
 
@@ -126,3 +127,13 @@ class GamePhase(BasePhase):
             raise ServerException(errors_by_code["INVALID_ASKING_PLAYER"])
         if task.answer != "idk":
             self.players_manager.change_currently_asking_player()
+
+    def guess_character(self, player: Player, task: QuestionAsk) -> None:
+        if task.character_name not in self.players_manager.image_names:
+            assert ServerException("This character doesn't exist!")
+        if self.players_manager.get_enemy(player).character == task.character_name:
+            self.final_message = (
+                GameEnd(character_name=player.character, winner_id=player.game_id),
+                0,
+            )
+            self.end_phase()

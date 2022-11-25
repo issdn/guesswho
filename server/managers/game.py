@@ -80,10 +80,10 @@ class Game:
         await Broadcast.methods[phase.tasks[task_type][1]](
             player=player, task=task, players=self.players_manager.players
         )
-        if phase.server_message:
-            await Broadcast.methods[phase.server_message[1]](
+        if phase.final_message:
+            await Broadcast.methods[phase.final_message[1]](
                 player=player,
-                task=phase.server_message[0],
+                task=phase.final_message[0],
                 players=self.players_manager.players,
             )
 

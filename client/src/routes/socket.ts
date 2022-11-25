@@ -6,9 +6,18 @@ import {
 	pickedCharacter,
 	question,
 	asking,
-	answer
+	answer,
+	endGameInfo
 } from './stores';
-import type { Task, PlayerJoin, PlayerStore, Error, GameTask, QuestionAsk } from '../types';
+import type {
+	Task,
+	PlayerJoin,
+	PlayerStore,
+	Error,
+	GameTask,
+	QuestionAsk,
+	GameEnd
+} from '../types';
 
 const filterObject = (obj: object, game_id: number) => {
 	const filtered = Object.entries(obj).filter(([key, value]) => parseInt(key) !== game_id);
@@ -17,6 +26,8 @@ const filterObject = (obj: object, game_id: number) => {
 
 let l: PlayerStore;
 let _phase: string;
+
+let _enemyGameId: number;
 
 function playerJoin(message: PlayerJoin) {
 	game.subscribe((_l) => (l = _l));
@@ -52,7 +63,7 @@ const handlegameTask = (message: Task | PlayerJoin) => {
 	}
 };
 
-export const handleGameTask = (message: GameTask | QuestionAsk) => {
+export const handleGameTask = (message: GameTask | QuestionAsk | GameEnd) => {
 	if ((message as GameTask).task === 'pick_starting_character') {
 		pickedCharacter.set((message as GameTask).character_name as string);
 	} else if ((message as QuestionAsk).task === 'ask_question') {
@@ -64,6 +75,18 @@ export const handleGameTask = (message: GameTask | QuestionAsk) => {
 			asking.subscribe((a) => (_asking = a));
 			asking.set(!_asking);
 		}
+	} else if ((message as QuestionAsk).task === 'guess_character') {
+		asking.set(true);
+		enemyGameId.subscribe((e) => (_enemyGameId = e));
+		game.subscribe((g) => (l = g));
+		question.set(
+			`${l[_enemyGameId].game_id} wrongly guessed a character with name ${
+				message.character_name as string
+			}`
+		);
+	} else if ((message as GameEnd).task === 'game_end') {
+		phase.set('end');
+		endGameInfo.set(message as GameEnd);
 	}
 };
 

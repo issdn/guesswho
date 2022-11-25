@@ -54,6 +54,11 @@ class PlayersManager:
                 self.currently_asking_player = lobby_player.game_id
                 return
 
+    def get_enemy(self, player: Player) -> Player:
+        for lobby_player in self.players:
+            if player != lobby_player:
+                return lobby_player
+
     def draw_starting_player(self):
         self.currently_asking_player = random.choice(self.players).game_id
 

@@ -7,3 +7,11 @@ declare namespace App {
 	// interface Error {}
 	// interface Platform {}
 }
+
+declare namespace svelte.JSX {
+	interface HTMLProps<T> {
+		pickclick?: (event: CustomEvent) => void;
+		guessclick?: (event: CustomEvent) => void;
+		flipclick?: (event: CustomEvent) => void;
+	}
+}

@@ -22,13 +22,14 @@ let imageNames: [string];
 
 onMount(async () => {
     await fetch(`${$baseUrl}/${$token}/characters`)
-        .then((response) => response.json())
-        .then((data) => imageNames = data.names)
-
+    .then((response) => response.json())
+    .then((data) => imageNames = data.names)
+    
     fetch(`${$baseUrl}/${$token}/starting_player`)
-        .then(res => res.json())
-        .then(data => {(parseInt(data.starting_player_id)) === $myGameId ? asking.set(true) : asking.set(false); console.log(data.starting_player_id); console.log($myGameId)})
+    .then(res => res.json())
+    .then(data => {(parseInt(data.starting_player_id)) === $myGameId ? asking.set(true) : asking.set(false);})
 })
+
 </script>
         {#if imageNames}
         <div class="w-full h-full sm:px-12 md:px-24 pt-8 flex flex-col gap-16">

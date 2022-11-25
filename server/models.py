@@ -44,6 +44,14 @@ class StartingCharacterPick(Task):
 
 
 class QuestionAsk(Task):
-    task: Literal["ask_question", "answer_question"]
+    task: Literal["ask_question", "answer_question", "guess_character"]
     question: Optional[str]
     answer: Optional[Literal["yes", "no", "idk"]]
+    character_name: Optional[str]
+
+
+class GameEnd(BaseModel):
+    task: Literal["game_end"] = "game_end"
+    winner_id: Optional[int]
+    character_name: Optional[str]
+    restart: Optional[bool]
