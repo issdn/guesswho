@@ -48,33 +48,45 @@ module.exports = {
   theme: {
     extend: {
       colors:{
-        salsa: "#EE5454",
-        mikado: "#FFC510",
-        safety: "#F6DB35",
-        un: "#4C94F6",
-        neoblue: "#4C69F6"
+        space: "#293462",
+        cornflower: "#313F78",
+        lemon: "#FFF80A",
+        ua: "#D61C4E",
+        spaceh: "#313F76",
+        cornflowerh: "#39498B",
+        lemonh: "#FFFA76",
+        uah: "#E22356" 
       },
       keyframes: {
         dots: {
           '0%': {
-            content: ''
+            content: "''"
         },
         '25%': {
-            content: '.'
+            content: "'.'"
         },
         '50%': {
-            content: '..'
+            content: "'..'"
         },
         '75%': {
-            content: '...'
+            content: "'...'"
         },
         '100%': {
-            content: ''
+            content: "''"
         },
+        },
+        yspin: {
+          "0%": {
+            transform: "rotateY(0deg)"
+          },
+          "100%":{
+            transform: "rotateY(360deg)"
+          }
         }
       },
       animation: {
-        dots: "dots steps(1, end) 1s infinite"
+        dots: "dots steps(1, end) 2s infinite",
+        yspin: "yspin 3s linear infinite" 
       }
     },
   },

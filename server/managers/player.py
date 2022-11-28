@@ -1,3 +1,4 @@
+import asyncio
 import random
 from typing import Literal
 from fastapi import WebSocket
@@ -17,6 +18,7 @@ class Player:
         self.creator: bool = False
         self.ready: bool = False
         self.character: str = None
+        self._timer_task = None
 
     def set_nickname(self, nickname: str):
         self.nickname = nickname
@@ -40,6 +42,18 @@ class Player:
 
     def get_task(self, task_type: TaskTypes) -> Task:
         return Task(task=task_type, game_id=self.game_id).json()
+
+    async def _timer(self, time: int, callback: callable) -> None:
+        print("STARTED!!")
+        await asyncio.sleep(time)
+        callback(self)
+
+    def _start_timer(self, time: int, callback: callable) -> None:
+        self._timer_task = asyncio.create_task(self._timer(time, callback))
+
+    def stop_timer(self) -> None:
+        if self._timer_task:
+            self._timer_task.cancel()
 
 
 class PlayersManager:

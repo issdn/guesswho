@@ -40,7 +40,12 @@ class Error(BaseModel):
 
 
 class StartingCharacterPick(Task):
+    task: Literal["pick_starting_character"] = "pick_starting_character"
     character_name: str
+
+
+class CharactersPicked(BaseModel):
+    task: Literal["characters_picked"] = "characters_picked"
 
 
 class QuestionAsk(Task):

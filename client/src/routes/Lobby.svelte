@@ -3,34 +3,48 @@ import {
     game,
     myGameId,
     enemyGameId,
-    token
-} from "./stores"
+    token,
+    sendToast
+} from "../stores"
+import Button from "./Button.svelte"
+import {
+    sendTask
+} from "../socketStore"
 
-import {sendTask} from "./socketStore"
-
+ 
 $: canStart = $game[$myGameId].ready && $game[$enemyGameId].ready
-
 </script>
 
-<div class="flex flex-col gap-y-8 justify-center items-center text-safety">
-    <p>your token 🤐: {$token}</p>
-    <p class="text-4xl">you: {$game[$myGameId].nickname}</p>
-    {#each Object.entries($game) as [id, player] }
-    {#if parseInt(id) !== $myGameId}
-    <div class="flex flex-row gap-x-1">
-        <p class="text-4xl">enemy: {player.nickname}</p>
-        <p class="text-lg">{player.ready ? "ready" : "not ready"}</p>
+<div class="w-full h-full flex flex-col py-16 gap-y-16 items-center text-lemon">
+    <div class="text-4xl flex flex-row gap-x-2 items-center">
+        <p>your token 🤐: </p>
+        <p on:click={() => {navigator.clipboard.writeText($token).then(() => {sendToast("Copied!",2000,"success")})}} class="bg-space px-2 py-1 rounded-xl cursor-pointer">{$token}</p>
     </div>
-    {/if}
-    {/each}
-    <button disabled={!$game[$enemyGameId]} on:click={(e) => {sendTask(e, "player_ready");}}
-        class="uppercase bg-safety rounded-md px-16 text-2xl text-black {!$game[$enemyGameId] ? 'cursor-not-allowed' : ''}">
-        {$game[$myGameId].ready ? "ready" : "not ready"}
-    </button>
-    {#if $game[$myGameId].creator}
-    <button on:click={(e) => sendTask(e, "start_game")} disabled={!canStart}
-        class="uppercase bg-safety rounded-md px-16 text-2xl text-black {!canStart ? 'cursor-not-allowed' : ''}">
-        start!
-    </button>
-    {/if}
-</div>
+    <div class="flex flex-col h-full justify-around items-center">
+        <div class="flex flex-row gap-x-16 text-6xl items-center">
+            <div>
+                <p>{$game[$myGameId].nickname}</p>
+                <p class="text-xl text-right">(you)</p>
+            </div>
+            {#each Object.entries($game) as [id, player] }
+            {#if parseInt(id) !== $myGameId}
+            <p class="text-9xl rotate-12">VS</p>
+            <div class="flex flex-col">
+                <p>{player.nickname}</p>
+                <p class="text-xl">{player.ready ? "ready" : "not ready"}</p>
+            </div>
+            {/if}
+            {/each}
+        </div>
+        <div class="w-96 flex flex-col gap-y-4">
+            <Button onClickFunc={(e) => sendTask(e, "player_ready")} disabled={!$game[$enemyGameId]}>
+                {$game[$myGameId].ready ? "ready" : "not ready"}
+            </Button>
+                {#if $game[$myGameId].creator}
+                <Button onClickFunc={(e) => sendTask(e, "start_game")} disabled={!canStart}>
+                    Start
+                </Button>
+                    {/if}
+                    </div>
+                    </div>
+                    </div>

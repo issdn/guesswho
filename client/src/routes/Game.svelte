@@ -11,7 +11,7 @@ import {
     baseUrl,
     myGameId,
     asking,
-} from "./stores"
+} from "../stores"
 import GameInfoBar from "./GameInfoBar.svelte";
 
 /* Darken the screen when choosing a character. */

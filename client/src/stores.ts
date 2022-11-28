@@ -1,5 +1,5 @@
 import { readable, writable } from 'svelte/store';
-import type { PlayerStore, GameEnd } from '../types';
+import type { PlayerStore, GameEnd } from './types';
 
 // Character picked by the player
 export const pickedCharacter = writable<string>('');
@@ -18,3 +18,19 @@ export const asking = writable<boolean>(false);
 export const guessing = writable<boolean>(false);
 export const gamePhase = writable<'picking' | 'asking' | 'answering' | ''>('');
 export const endGameInfo = writable<GameEnd>();
+
+const id = () => {
+	return Math.random().toString(36).substring(2, 9);
+};
+
+export const toasts = writable<{ id: string; message: string; type: 'warning' | 'success' }[]>([]);
+
+export const sendToast = (message: string, timeout = 4000, type: 'warning' | 'success') => {
+	const toastId: string = id();
+	toasts.update((state) => [...state, { id: toastId, message: message, type: type }]);
+	setTimeout(() => removeToast(toastId), timeout);
+};
+
+export const removeToast = (id: string) => {
+	toasts.update((all) => all.filter((t) => t.id !== id));
+};

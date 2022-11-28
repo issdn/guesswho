@@ -1,3 +1,4 @@
+import asyncio
 from random import choice
 from typing import Literal
 from fastapi import WebSocket
@@ -47,7 +48,12 @@ class Game:
         self.players_manager: PlayersManager = PlayersManager()
         self.phases = tuple(
             [
-                phase(self.players_manager, self.end_phase, self.back_to_lobby)
+                phase(
+                    self.players_manager,
+                    self.end_phase,
+                    self.back_to_lobby,
+                    self.stop_timer,
+                )
                 for phase in phases
             ]
         )
@@ -55,6 +61,9 @@ class Game:
 
     def end_phase(self):
         self.current_phase_position += 1
+        timed_function = self.phases[self.current_phase_position].timed_function
+        if timed_function:
+            self._start_timer(timed_function[0], timed_function[1])
 
     def back_to_lobby(self):
         self.current_phase_position = 0

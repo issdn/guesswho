@@ -1,7 +1,10 @@
 <script lang="ts">
     import Modal from "./Modal.svelte"
-    import {asking, question, answer, game, enemyGameId, pickedCharacter, guessing} from "./stores"
-    import {sendTask} from "./socketStore"
+    import {asking, question, game, enemyGameId, pickedCharacter, guessing} from "../stores"
+    import {sendTask} from "../socketStore"
+    import Button from "./Button.svelte";
+	import Spinner from "./Spinner.svelte";
+	import TextLoading from "./TextLoading.svelte";
 
     let newQuestion: string;
     let asked = false
@@ -28,38 +31,48 @@
     }
 
 </script>
-<div class="w-full flex flex-col xl:flex-row gap-x-24 border-2 border-safety items-center py-4 px-8 xl:px-24 gap-y-4 rounded-xl">
-    <p class="text-7xl text-safety">0:59</p>
-    <div class="flex flex-row w-full gap-x-24 gap-y-4 xl:gap-y-0 items-center justify-center xl:justify-between flex-wrap text-2xl"> 
+<div class="w-full flex flex-col xl:flex-row gap-x-24 border-2 border-lemon items-center py-4 px-8 xl:px-24 gap-y-4 rounded-xl">
+    <p class="text-7xl text-lemon">0:59</p>
+    <div class="flex flex-row w-full gap-x-24 gap-y-4 xl:gap-y-0 items-center justify-center xl:justify-between flex-wrap text-lemon text-4xl "> 
+        {#if !$pickedCharacter}
+        <TextLoading>It's your time to pick a character</TextLoading>
+        {:else}
         {#if $asking}
             {#if !asked}
                 {#if $pickedCharacter}
-                <div class="flex flex-row gap-x-8">
-                    <button on:click={setAskModalOpen} class="bg-safety h-fit px-4 py-1 rounded-md">Ask a question</button>
-                    <div class="text-safety text-4xl">or</div>
-                    <button on:click={() => guessing.set(true)} class="bg-safety h-fit px-4 py-1 rounded-md">Guess the character</button>
+                <div class="flex flex-col items-center gap-y-4 md:flex-row md:gap-x-8">
+                    <Button onClickFunc={setAskModalOpen}>
+                        Ask a question
+                    </Button>
+                    <div class="text-lemon text-4xl">or</div>
+                    <Button onClickFunc={() => guessing.set(!$guessing)} style={$guessing ? "bg-lemonh" : "bg-lemon"}>
+                        {#if !$guessing}
+                            guess the character
+                        {:else}
+                        <TextLoading>
+                            guessing
+                        </TextLoading>
+                        {/if}
+                    </Button>
                 </div>
                 {:else}
-                <p class="text-safety text-4xl after:content-[''] after:animate-dots">It's your time to pick a character!</p>
+                <TextLoading>It's your time to pick a character</TextLoading>
                 {/if}
             {:else}
-            <p class="text-safety text-4xl after:content-[''] after:animate-dots">{$game[$enemyGameId].nickname}&nbsp;is answering</p>
+            <TextLoading>{$game[$enemyGameId].nickname}&nbsp;is answering</TextLoading>
             {/if}
         {:else}
             {#if $question}
-            <p class="text-safety text-4xl after:content-[''] after:animate-dots">{$game[$enemyGameId].nickname}:&nbsp;{$question}</p>
+            <TextLoading>{$game[$enemyGameId].nickname}:&nbsp;{$question}</TextLoading>
             <div class="flex flex-row gap-2">
-                <button on:click={(e) => {handleQuestionAnswer(e, "yes")}} class="bg-safety px-4 py-1 h-fit rounded-md hover:bg-mikado">Yes!</button>
-                <button on:click={(e) => {handleQuestionAnswer(e, "no")}} class="bg-safety px-4 py-1 h-fit rounded-md hover:bg-mikado">No!</button>
-                <button on:click={(e) => {handleQuestionAnswer(e, "idk")}} class="bg-safety px-4 py-1 h-fit rounded-md hover:bg-mikado">I don't understand.</button>
+                <button on:click={(e) => {handleQuestionAnswer(e, "yes")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">Yes!</button>
+                <button on:click={(e) => {handleQuestionAnswer(e, "no")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">No!</button>
+                <button on:click={(e) => {handleQuestionAnswer(e, "idk")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">I don't understand.</button>
             </div>
             {:else}
-                {#if $pickedCharacter}
-                    <p class="text-safety text-4xl after:content-[''] after:animate-dots">{$game[$enemyGameId].nickname} is asking...</p>
-                {:else}
-                    <p class="text-safety text-4xl after:content-[''] after:animate-dots">It's your time to pick a character!</p>
-                {/if}
+            <TextLoading>{$game[$enemyGameId].nickname}&nbsp;is asking</TextLoading>
             {/if}
+        {/if}
         {/if}
     </div>
 </div>
@@ -68,7 +81,7 @@
     <h1 class="text-black text-4xl text-center">Ask a question!</h1>
     <textarea bind:value={newQuestion} class="h-full resize-none p-2 text-xl rounded-xl"/>
         <div class="w-full flex flex-row justify-between">
-            <button on:click={(e) => {handleQuestionSend(e)}} class="px-8 py-1 bg-salsa rounded-xl">Ask</button>
-            <button on:click={setAskModalClose} class="px-8 py-1 border-2 border-salsa rounded-xl text-salsa">Cancel</button>
+            <button on:click={(e) => {handleQuestionSend(e)}} class="px-8 py-1 bg-space rounded-xl">Ask</button>
+            <button on:click={setAskModalClose} class="px-8 py-1 border-2 border-space rounded-xl text-space">Cancel</button>
         </div>
         </Modal>

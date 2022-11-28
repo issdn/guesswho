@@ -8,10 +8,8 @@ declare namespace App {
 	// interface Platform {}
 }
 
-declare namespace svelte.JSX {
-	interface HTMLProps<T> {
-		pickclick?: (event: CustomEvent) => void;
-		guessclick?: (event: CustomEvent) => void;
-		flipclick?: (event: CustomEvent) => void;
-	}
+declare namespace svelte.JSX {}
+
+declare module '@fortawesome/pro-solid-svg-icons/index.es' {
+	export * from '@fortawesome/pro-solid-svg-icons';
 }

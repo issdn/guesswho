@@ -9,15 +9,7 @@ import {
 	answer,
 	endGameInfo
 } from './stores';
-import type {
-	Task,
-	PlayerJoin,
-	PlayerStore,
-	Error,
-	GameTask,
-	QuestionAsk,
-	GameEnd
-} from '../types';
+import type { Task, PlayerJoin, PlayerStore, Error, GameTask, QuestionAsk, GameEnd } from './types';
 
 const filterObject = (obj: object, game_id: number) => {
 	const filtered = Object.entries(obj).filter(([key, value]) => parseInt(key) !== game_id);
