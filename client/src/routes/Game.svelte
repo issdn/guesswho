@@ -8,11 +8,11 @@ import {
 } from 'svelte/transition';
 import {
     token,
-    baseUrl,
     myGameId,
     asking,
 } from "../stores"
 import GameInfoBar from "./GameInfoBar.svelte";
+import { Config } from "../config";
 
 /* Darken the screen when choosing a character. */
 let darkened: boolean = false
@@ -21,13 +21,9 @@ const darken = (value: boolean) => darkened = value
 let imageNames: [string];
 
 onMount(async () => {
-    await fetch(`${$baseUrl}/${$token}/characters`)
+    await fetch(`${Config.BASE_URL}/${$token}/characters`)
     .then((response) => response.json())
     .then((data) => imageNames = data.names)
-    
-    fetch(`${$baseUrl}/${$token}/starting_player`)
-    .then(res => res.json())
-    .then(data => {(parseInt(data.starting_player_id)) === $myGameId ? asking.set(true) : asking.set(false);})
 })
 
 </script>

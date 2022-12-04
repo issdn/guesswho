@@ -5,13 +5,13 @@ import {
 import {
     token,
     pickedCharacter,
-    baseUrl,
     guessing
 } from "../stores";
 import {
     shadowhandler,
     conditionalhandler
 } from "../actions"
+import {Config} from "../config"
 
 export let darken: (value: boolean) => void;
 export let characterName: string;
@@ -23,7 +23,7 @@ $: isGuessing = $guessing && $pickedCharacter !== ""
 $: isPicking = $pickedCharacter === ""
 
 const fetchImage = (async () => {
-    const response = await fetch(`${$baseUrl}/${$token}/characters/${characterName}`)
+    const response = await fetch(`${Config.BASE_URL}/${$token}/characters/${characterName}`)
     return await response
 })()
 

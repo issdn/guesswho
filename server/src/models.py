@@ -46,6 +46,7 @@ class StartingCharacterPick(Task):
 
 class HelperMessages(BaseModel):
     task: Literal["characters_picked", "asking_overtime", "answering_overtime"]
+    game_id: Optional[int]
 
 
 class QuestionAsk(Task):

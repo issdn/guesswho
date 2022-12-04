@@ -1,12 +1,13 @@
 <script lang="ts">
     import Game from "./Game.svelte";
     import Lobby from "./Lobby.svelte"
-    import { token, phase, nickname, baseUrl} from "../stores"
+    import { token, phase, nickname} from "../stores"
     import { joinSocket } from "../socketStore"
 	import ToastContainer from "./ToastContainer.svelte";
+	import { Config } from "../config";
 
     const createNewGame = async () => {
-        await fetch(`${$baseUrl}/newgame`, {method: "POST"}).
+        await fetch(`${Config.BASE_URL}/newgame`, {method: "POST"}).
             then((response) => response.json()).
                 then((data)=>{
                     if (data.task == "init") {

@@ -1,10 +1,8 @@
 import { writable } from 'svelte/store';
-import { handleGameTask, handleTask } from './socket';
-import { token, phase, nickname, myGameId } from './stores';
+import { handleTask } from './socket';
+import { token, nickname, myGameId } from './stores';
 
 const baseSocketUrl = 'ws://localhost:8000';
-
-let _phase: string;
 
 let _token: string;
 token.subscribe((t) => (_token = t));

@@ -25,17 +25,6 @@ def clear_function_name(function_name: str) -> tuple[str, int]:
     return (clear_name, broadcast_function_number)
 
 
-def timed(time: int) -> callable:
-    def timed_decorator(f: callable):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            return f(*args, **kwargs)
-
-        return wrapper
-
-    return timed_decorator
-
-
 class BasePhase:
     """
     Phases are main pieces of logic here.
@@ -127,7 +116,6 @@ class GamePrepPhase(BasePhase):
         await self._can_start()
 
     async def _pick_random_character(self, player: Player):
-        print("PICKING RANDOM CHART")
         random_character = self._players_manager.draw_random_character_name()
         player.set_character(random_character)
         await self._message_queue.send_message(
@@ -136,10 +124,13 @@ class GamePrepPhase(BasePhase):
         await self._can_start()
 
     async def _can_start(self):
-        print("CAN START")
         if self._players_manager.all_playes_characters_picked():
             await self._message_queue.send_message(
-                0, HelperMessages(task="characters_picked")
+                0,
+                HelperMessages(
+                    task="characters_picked",
+                    game_id=self._players_manager.currently_asking_player_game_id,
+                ),
             )
             self._shift_phases()
 

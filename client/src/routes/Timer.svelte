@@ -1,6 +1,7 @@
 <script lang="ts">
-    export let time: number;
-
+    import {timer} from "../stores"
+    let time = $timer
+    
     setInterval(() => {
         if (time > 0) time--;
     }, 1000);
