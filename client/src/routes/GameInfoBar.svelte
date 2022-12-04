@@ -3,8 +3,8 @@
     import {asking, question, game, enemyGameId, pickedCharacter, guessing} from "../stores"
     import {sendTask} from "../socketStore"
     import Button from "./Button.svelte";
-	import Spinner from "./Spinner.svelte";
-	import TextLoading from "./TextLoading.svelte";
+	import Spinner from "./Spinner.svelte"; 	import TextLoading from "./TextLoading.svelte";
+	import Timer from "./Timer.svelte";
 
     let newQuestion: string;
     let asked = false
@@ -32,7 +32,7 @@
 
 </script>
 <div class="w-full flex flex-col xl:flex-row gap-x-24 border-2 border-lemon items-center py-4 px-8 xl:px-24 gap-y-4 rounded-xl">
-    <p class="text-7xl text-lemon">0:59</p>
+    <Timer time={60}/>
     <div class="flex flex-row w-full gap-x-24 gap-y-4 xl:gap-y-0 items-center justify-center xl:justify-between flex-wrap text-lemon text-4xl "> 
         {#if !$pickedCharacter}
         <TextLoading>It's your time to pick a character</TextLoading>
@@ -63,8 +63,8 @@
             {/if}
         {:else}
             {#if $question}
-            <TextLoading>{$game[$enemyGameId].nickname}:&nbsp;{$question}</TextLoading>
-            <div class="flex flex-row gap-2">
+            <p>{$game[$enemyGameId].nickname}:&nbsp;{$question}</p>
+            <div class="flex flex-row gap-2 text-black">
                 <button on:click={(e) => {handleQuestionAnswer(e, "yes")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">Yes!</button>
                 <button on:click={(e) => {handleQuestionAnswer(e, "no")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">No!</button>
                 <button on:click={(e) => {handleQuestionAnswer(e, "idk")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">I don't understand.</button>

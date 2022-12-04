@@ -6,12 +6,12 @@ export const pickedCharacter = writable<string>('');
 // Player nickname
 export const nickname = writable<string>('anonymous');
 // Phase
+export const baseUrl = readable<string>('http://127.0.0.1:8000');
 export const phase = writable<'lobby' | 'game' | 'end' | ''>('');
 export const token = writable<string>('');
 export const game = writable<PlayerStore>({});
 export const myGameId = writable<number>(-1);
 export const enemyGameId = writable<number>(-1);
-export const baseUrl = readable<string>('http://127.0.0.1:8000');
 export const question = writable<string>('');
 export const answer = writable<'yes' | 'no' | 'idk' | ''>('');
 export const asking = writable<boolean>(false);
@@ -19,6 +19,7 @@ export const guessing = writable<boolean>(false);
 export const gamePhase = writable<'picking' | 'asking' | 'answering' | ''>('');
 export const endGameInfo = writable<GameEnd>();
 
+// ----------------------- Toasts
 const id = () => {
 	return Math.random().toString(36).substring(2, 9);
 };

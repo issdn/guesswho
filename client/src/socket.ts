@@ -9,7 +9,16 @@ import {
 	answer,
 	endGameInfo
 } from './stores';
-import type { Task, PlayerJoin, PlayerStore, Error, GameTask, QuestionAsk, GameEnd } from './types';
+import type {
+	Task,
+	PlayerJoin,
+	PlayerStore,
+	Error,
+	GameTask,
+	QuestionAsk,
+	GameEnd,
+	HelperMessage
+} from './types';
 
 const filterObject = (obj: object, game_id: number) => {
 	const filtered = Object.entries(obj).filter(([key, value]) => parseInt(key) !== game_id);
@@ -43,7 +52,7 @@ const playerReady = (message: Task) => {
 	});
 };
 
-const handlegameTask = (message: Task | PlayerJoin) => {
+const handleLobbyTask = (message: Task | PlayerJoin) => {
 	if ((message as PlayerJoin).task === 'player_join') {
 		playerJoin(message as PlayerJoin);
 	} else if ((message as Task).task === 'player_ready') {
@@ -55,7 +64,7 @@ const handlegameTask = (message: Task | PlayerJoin) => {
 	}
 };
 
-export const handleGameTask = (message: GameTask | QuestionAsk | GameEnd) => {
+export const handleGameTask = (message: GameTask | QuestionAsk | GameEnd | HelperMessage) => {
 	if ((message as GameTask).task === 'pick_starting_character') {
 		pickedCharacter.set((message as GameTask).character_name as string);
 	} else if ((message as QuestionAsk).task === 'ask_question') {
@@ -73,19 +82,26 @@ export const handleGameTask = (message: GameTask | QuestionAsk | GameEnd) => {
 		game.subscribe((g) => (l = g));
 		question.set(
 			`${l[_enemyGameId].game_id} wrongly guessed a character with name ${
-				message.character_name as string
+				(message as QuestionAsk).character_name as string
 			}`
 		);
 	} else if ((message as GameEnd).task === 'game_end') {
 		phase.set('end');
 		endGameInfo.set(message as GameEnd);
+	} else if ((message as HelperMessage).task === 'asking_overtime') {
+		asking.set(false);
+	} else if ((message as HelperMessage).task === 'answering_overtime') {
+		asking.set(true);
 	}
 };
 
-export const handleTask = (message: Task | PlayerJoin | GameTask | Error | QuestionAsk) => {
+export const handleTask = (
+	message: Task | PlayerJoin | GameTask | Error | QuestionAsk | HelperMessage
+) => {
 	console.log(message);
 	phase.subscribe((p) => (_phase = p));
 	if ((message as Error).type === 'error') alert((message as Error).message);
-	else if (_phase === 'lobby' || _phase === '') handlegameTask(message as Task | PlayerJoin);
-	else if (_phase === 'game') handleGameTask(message as GameTask);
+	else if (_phase === 'lobby' || _phase === '') handleLobbyTask(message as Task | PlayerJoin);
+	else if (_phase === 'game')
+		handleGameTask(message as GameTask | QuestionAsk | GameEnd | HelperMessage);
 };

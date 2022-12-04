@@ -42,4 +42,8 @@ export type Error = {
 	field?: string;
 };
 
+export type HelperMessage = {
+	task: 'characters_picked' | 'asking_overtime' | 'answering_overtime';
+};
+
 export type PlayerStore = Record<number, Player>;
