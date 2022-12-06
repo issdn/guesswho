@@ -56,7 +56,7 @@ const handleQuestionAnswer = (e: Event, answer: "yes" | "no" | "idk") => {
             {:else}
             <TextLoading>{enemyNickname}&nbsp;is picking a character</TextLoading>
             {/if}
-            {:else if $gamePhase === "question"}
+            {:else if $gamePhase === "ask" || $gamePhase === "answer"}
             {#if $asking}
             {#if !asked}
             <div class="flex flex-col items-center gap-y-4 md:flex-row md:gap-x-8">

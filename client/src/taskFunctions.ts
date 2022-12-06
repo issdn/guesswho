@@ -9,10 +9,10 @@ import {
 	asking,
 	answer,
 	gameEndInfo,
-	timer,
 	gamePhase,
 	sendToast,
-	resetAll
+	resetAll,
+	timer
 } from './stores';
 import type {
 	PlayerJoin,
@@ -84,12 +84,11 @@ const gameStart = (message: LobbyTask) => {
 
 const startingCharacterPicked = (message: PickStartingCharacter) => {
 	pickedCharacter.set((message as PickStartingCharacter).character_name as string);
-	timer.set(Config.ASKING_TIME);
 };
 
 const questionAsked = (message: Question) => {
 	question.set((message as Question).question as string);
-	timer.set(Config.ANSWERING_TIME);
+	gamePhase.set(Config['GAME_PHASE_ANSWER']);
 };
 
 const questionAnswered = (message: Question) => {
@@ -99,7 +98,7 @@ const questionAnswered = (message: Question) => {
 		asking.subscribe((a) => (_asking = a));
 		asking.set(!_asking);
 	}
-	timer.set(Config.ASKING_TIME);
+	gamePhase.set(Config['GAME_PHASE_ASK']);
 };
 
 const characterGuessed = (message: Question) => {
@@ -116,7 +115,7 @@ const characterGuessed = (message: Question) => {
 const charactersPicked = (message: HelperMessage) => {
 	myGameId.subscribe((id) => (_myGameId = id));
 	message.game_id === _myGameId ? asking.set(true) : asking.set(false);
-	gamePhase.set('question');
+	gamePhase.set(Config['GAME_PHASE_ASK']);
 };
 
 const gameEnded = (message: GameEnd) => {
@@ -131,6 +130,7 @@ const askingOvertime = (message: HelperMessage) => {
 	} else {
 		asking.set(true);
 	}
+	timer.refresh();
 };
 
 const answeringOvertime = (message: HelperMessage) => {
@@ -141,6 +141,7 @@ const answeringOvertime = (message: HelperMessage) => {
 	} else {
 		asking.set(true);
 	}
+	timer.refresh();
 };
 
 const restartGame = (message: HelperMessage) => {

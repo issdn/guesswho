@@ -1,6 +1,7 @@
-import { writable } from 'svelte/store';
+import { derived, writable } from 'svelte/store';
 import type { PlayerStore, GameEnd } from './types';
 import { Config, type ConfigType } from './config';
+import { updated } from '$app/stores';
 
 /** Character picked by the player  */
 export const pickedCharacter = writable<string>('');
@@ -22,8 +23,16 @@ export const answer = writable<
 >('');
 /** Stored to determine wheter the player should be asking or answering now.  */
 export const asking = writable<boolean>(false);
-/** Mainly to determine what event handlers should the cards have.  */
+/** Conditional variable changable by the player.  */
 export const guessing = writable<boolean>(false);
+/** Looks whether player can actually guess.  */
+export const canGuess = derived(
+	[pickedCharacter, asking, guessing],
+	([$pickedCharacter, $asking, $guessing]) => {
+		return $pickedCharacter === '' && $asking && $guessing;
+	}
+);
+export const picking = derived(pickedCharacter, ($pickedCharacter) => !$pickedCharacter);
 /** Phase needed for determining what view to render  */
 export const phase = writable<
 	| ConfigType['PHASE_LOBBY']
@@ -33,16 +42,31 @@ export const phase = writable<
 >('');
 /** Necessary to determine which text to show in the info bar on top. */
 export const gamePhase = writable<
-	ConfigType['GAME_PHASE_QUESTION'] | ConfigType['GAME_PHASE_PICK']
+	ConfigType['GAME_PHASE_ASK'] | ConfigType['GAME_PHASE_PICK'] | ConfigType['GAME_PHASE_ANSWER']
 >(Config['GAME_PHASE_PICK']);
 /** Stats and info at the end of the game.  */
 export const gameEndInfo = writable<GameEnd>();
+// export const timer = writable<
+// 	ConfigType['PICKING_TIME'] | ConfigType['ANSWERING_TIME'] | ConfigType['ASKING_TIME']
+// >(Config.PICKING_TIME);
+const newTimer = () => {
+	let time: number = Config.ANSWERING_TIME;
+	const { subscribe, set, update } = writable<number>(Config.PICKING_TIME);
 
-/** Keeps time of picking a character, asking, answering etc. */
-export const timer = writable<
-	ConfigType['PICKING_TIME'] | ConfigType['ANSWERING_TIME'] | ConfigType['ASKING_TIME']
->(Config.PICKING_TIME);
+	return {
+		subscribe,
+		refresh: () => set(time),
+		setNew: (
+			newTime: ConfigType['PICKING_TIME'] | ConfigType['ANSWERING_TIME'] | ConfigType['ASKING_TIME']
+		) => {
+			set(newTime);
+			time = newTime;
+		},
+		decrement: () => update((n) => n - 1)
+	};
+};
 
+export const timer = newTimer();
 /** ------------------ Toasts ------------------ */
 const id = () => {
 	return Math.random().toString(36).substring(2, 9);
@@ -66,7 +90,6 @@ export const resetAll = () => {
 	question.set('');
 	answer.set('');
 	asking.set(false);
-	guessing.set(false);
 	gamePhase.set(Config['GAME_PHASE_PICK']);
 	pickedCharacter.set('');
 };

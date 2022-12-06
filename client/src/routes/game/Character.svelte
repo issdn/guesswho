@@ -4,9 +4,8 @@ import {
 } from "../../socketStore";
 import {
     token,
-    pickedCharacter,
-    guessing,
-    asking
+    picking,
+    canGuess
 } from "../../stores";
 import {
     shadowhandler,
@@ -14,6 +13,7 @@ import {
 } from "../../actions"
 import {Config} from "../../config"
 	import { prettifyCharacterName } from "../../scripts";
+	import { onMount } from "svelte";
 
 export let darken: (value: boolean) => void;
 export let characterName: string;
@@ -21,8 +21,6 @@ export let characterName: string;
 const prettyCharacterName: string = prettifyCharacterName(characterName)
 
 let isFlipped: boolean = false
-$: isGuessing = $guessing && $pickedCharacter !== "" && $asking
-$: isPicking = $pickedCharacter === ""
 
 const fetchImage = (async () => {
     const response = await fetch(`${Config.BASE_URL}/${$token}/characters/${characterName}`)
@@ -47,23 +45,21 @@ const handlePickCharacter = (e: Event) => {
     darken(false);
 }
 
-const getCurrentAction = (isPicking: boolean, isGuessing: boolean) => {
-    if (isGuessing) return handleGuessCharacter
-    else if (isPicking) return handlePickCharacter
-    else return flip
-}
+let currentAction: (e: Event) => void;
+$:  if ($picking) currentAction = handlePickCharacter
+    else if ($canGuess) currentAction = handleGuessCharacter
+    else currentAction = flip
 
-$: currentAction = getCurrentAction(isPicking, isGuessing)
 </script>
 
 <div
     use:conditionalhandler={currentAction}
-    use:shadowhandler={(isGuessing&&$asking)||(isPicking&&$asking)}
+    use:shadowhandler={($canGuess)||$picking}
     on:shadowenter={() => {darken(true)}}
     on:shadowleave={() => {darken(false)}}
     class="min-w-[8rem] sm:w-40 min-h-[11.5rem] sm:min-h-[13.5rem] hover:z-10 p-2 rounded-xl preserve3d bg-lemon duration-500 cursor-pointer border-4 border-[#FFA90A]
     {isFlipped ? 'flip-y' : ''}
-    {isGuessing||isPicking ? 'hover:-translate-y-3' : ''}"
+    {$canGuess||$picking ? 'hover:-translate-y-3' : ''}"
     >
     {#await fetchImage}
     <p>loading...</p>

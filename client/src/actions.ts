@@ -1,5 +1,3 @@
-// type params = { isGuessing: boolean, isPicking: boolean, callback: () => void };
-
 export const conditionalhandler = (node: HTMLElement, callback: (e: Event) => void) => {
 	const clickHandler = (callback: (e: Event) => void) => {
 		node.addEventListener('click', callback);
@@ -37,6 +35,7 @@ export const shadowhandler = (node: HTMLElement, shouldDropShadow: boolean) => {
 	return {
 		update(newShouldDropShadow: boolean) {
 			shouldDropShadow = newShouldDropShadow;
+			if (!shouldDropShadow) node.dispatchEvent(new Event('shadowleave'));
 			handleMouseEnter();
 			handleMouseLeave();
 		},

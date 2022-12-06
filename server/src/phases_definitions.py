@@ -143,7 +143,7 @@ class GamePhase(BasePhase):
             Config.ASKING_TIME,
             "ask_question",
             self._ask_answer_overtime,
-            ("asking_overtime", "answering_overtime"),
+            ("asking_overtime",),
         )
 
     async def ask_question_1(self, player: Player, task: QuestionAsk) -> None:
@@ -156,10 +156,7 @@ class GamePhase(BasePhase):
             Config.ASKING_TIME,
             "answer_question",
             self._ask_answer_overtime,
-            (
-                "answering_overtime",
-                "answer_question",
-            ),
+            ("answering_overtime",),
         )
 
     async def answer_question(self, player: Player, task: QuestionAsk) -> None:
@@ -184,29 +181,24 @@ class GamePhase(BasePhase):
             )
 
     async def _ask_answer_overtime(
-        self, task_name: str, next_task: Literal["ask_question", "answer_question"]
+        self, task_name: Literal["answering_overtime", "asking_overtime"]
     ) -> None:
-        if next_task == "answer_question":
+        if task_name == "answering_overtime":
             _overtime_player_id = (
                 self._players_manager.currently_answering_player_game_id
             )
-            _next_task = "ask_question"
         else:
             _overtime_player_id = self._players_manager.currently_asking_player_game_id
-            _next_task = "answer_question"
         await self._message_queue.send_message(
             0, HelperMessages(task=task_name, game_id=_overtime_player_id)
         )
         self._players_manager.change_currently_asking_player_game_id()
         self._message_queue.add_timed_task(
             self._players_manager.currently_answering_player_game_id,
-            Config.ANSWERING_TIME,
+            Config.ASKING_TIME,
             "answer_question",
             self._ask_answer_overtime,
-            (
-                "answering_overtime",
-                _next_task,
-            ),
+            ("asking_overtime",),
         )
 
     def _check_asking_player_specified(self) -> None:

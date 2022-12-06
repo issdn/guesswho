@@ -67,7 +67,7 @@ async def game(token: str, websocket: WebSocket):
     try:
         await phase_queue.player_loop(player)
     except WebSocketDisconnect:
-        if phase_queue.players_manager.players >= 0:
+        if not phase_queue.players_manager.players:
             del phase_queues[token]
         player_id = player.game_id
         phase_queue.players_manager.remove_player(player)
