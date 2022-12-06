@@ -1,5 +1,5 @@
 <script lang="ts">
-import Modal from "./Modal.svelte"
+import Modal from "../Modal.svelte"
 import {
     asking,
     question,
@@ -8,13 +8,13 @@ import {
     pickedCharacter,
     guessing,
     gamePhase
-} from "../stores"
+} from "../../stores"
 import {
     sendTask
-} from "../socketStore"
-import Button from "./Button.svelte";
-import TextLoading from "./TextLoading.svelte";
-import Timer from "./Timer.svelte";
+} from "../../socketStore"
+import Button from "../Button.svelte";
+import TextLoading from "../utils/TextLoading.svelte";
+import Timer from "../Timer.svelte";
 
 let newQuestion: string;
 let asked = false

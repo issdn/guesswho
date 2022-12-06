@@ -1,26 +1,22 @@
 import { phase } from './stores';
-import type { PlayerJoin, Error, GameTask, LobbyTask } from './types';
+import type { PlayerJoin, Error, GameTask, LobbyTask, PlayerLeave, HelperMessage } from './types';
 
 import * as tf from './taskFunctions';
 
 let _phase: string;
 
-type GenericFunctionRecord = Record<
-	string,
+type GenericFunctionRecord<K extends string> = Record<
+	K,
 	<T extends (...args: any) => void>(message: Parameters<T>) => void
 >;
 
-const lobbyTask: GenericFunctionRecord = {
+const lobbyTask: GenericFunctionRecord<PlayerJoin['task'] | LobbyTask['task']> = {
 	start_game: tf.gameStart,
-	player_leave: tf.playerLeave,
 	player_ready: tf.playerReady,
-	player_join: tf.playerJoin,
-	set_creator: (message: LobbyTask) => {
-		null;
-	}
+	player_join: tf.playerJoin
 };
 
-const gameTask: GenericFunctionRecord = {
+const gameTask: GenericFunctionRecord<GameTask['task']> = {
 	pick_starting_character: tf.startingCharacterPicked,
 	guess_character: tf.characterGuessed,
 	answer_question: tf.questionAnswered,
@@ -31,13 +27,19 @@ const gameTask: GenericFunctionRecord = {
 	characters_picked: tf.charactersPicked
 };
 
-export const handleTask = (message: GameTask | PlayerJoin | LobbyTask | Error) => {
+export const handleTask = (
+	message: GameTask | PlayerJoin | LobbyTask | Error | PlayerLeave | HelperMessage
+) => {
 	console.log(message);
 	phase.subscribe((p) => (_phase = p));
 	if ((message as Error).type === 'error') alert((message as Error).message);
-	else if (_phase === 'lobby' || _phase === '') {
+	else if ((message as PlayerLeave).task === 'player_leave') {
+		tf.playerLeave(message as PlayerLeave);
+	} else if (_phase === 'lobby' || _phase === '') {
 		lobbyTask[(message as LobbyTask | PlayerJoin).task](message);
 	} else if (_phase === 'game') {
 		gameTask[(message as GameTask).task](message);
+	} else if (_phase === 'end') {
+		tf.restartGame(message as HelperMessage);
 	}
 };

@@ -27,6 +27,8 @@ class Timer:
         self._overtime_callback = overtime_callback
         self._ending_task_name = ending_task_name
         self._additional_params = additional_params
+        if not isinstance(self._additional_params, tuple):
+            raise CriticalServerException("Additional params must be of type tuple.")
         self._task = asyncio.create_task(self._job())
 
     async def _job(self):
@@ -35,11 +37,12 @@ class Timer:
         self._delete_timed_tasks(self._player_game_id, self._ending_task_name)
 
     def stop(self):
+        """Stops currently running task (As in ``asyncio.create_task``)."""
         self._task.cancel()
         self._delete_timed_tasks(self._player_game_id, self._ending_task_name)
 
 
-class MessageQueue:
+class MessageManager:
     def __init__(self, players) -> None:
         self.players = players
         self.timed_tasks = {}
@@ -52,6 +55,7 @@ class MessageQueue:
         overtime_callback,
         additional_params=(),
     ) -> None:
+        print(additional_params)
         timer = Timer(
             delete_timed_task=self.delete_timed_task,
             timeout=time,
@@ -63,6 +67,18 @@ class MessageQueue:
         self.timed_tasks[player_game_id][ending_task_name] = timer
 
     async def send_message(self, send_function_type, task=None, player=None) -> None:
+        """Main function for sending messages.
+
+        ``send_function_type``: number from 0 - 3, where the numbers mean:
+
+        - [0]  send to all clients
+        - [1]  send to all players except the one specified as the player parameter
+        - [2]  send to player specified as parameter
+        - [3]  send player init info to all players
+        - [4]  don't send
+        """
+        if send_function_type == 4:
+            return
         if send_function_type == 0:
             await self._send_task_to_all(task)
         elif send_function_type == 1:
@@ -73,9 +89,15 @@ class MessageQueue:
             await self._send_init()
 
     def timed_tasks_allocate_player_key(self, player_game_id: int) -> None:
+        """Creates an entry in timed_tasks dictionary with key of player's ``game_id`` and value of empty nested dictionary."""
         self.timed_tasks[player_game_id] = {}
 
+    def timed_tasks_delete_player_key(self, player_game_id: int) -> None:
+        """Delete an entry with specified ``player_game_id`` from ``timed_tasks`` dictionary."""
+        del self.timed_tasks[player_game_id]
+
     async def send_task(self, player, task: Task) -> None:
+        """Directly send task to the specified player."""
         await player.websocket.send_json(task.json())
 
     async def _send_task_to_enemy(self, player, task) -> None:
@@ -97,7 +119,16 @@ class MessageQueue:
             await lobby_player.websocket.send_json(pjr.json())
 
     def delete_timed_task(self, player_game_id: int, task_name: str) -> None:
+        """Deletes entry from ``timed_tasks[player_id]`` nested dictionary."""
         del self.timed_tasks[player_game_id][task_name]
+
+    def delete_all_timed_tasks(self) -> None:
+        """Deletes all currently running timed tasks from every players' dictionary."""
+        _to_stop = []
+        for player_task_list in self.timed_tasks.values():
+            for timed_task in player_task_list.values():
+                _to_stop.append(timed_task)
+        (task.stop() for task in _to_stop)
 
 
 class PhaseQueue:
@@ -105,7 +136,7 @@ class PhaseQueue:
         self._phases = phases
         self.players_manager = PlayersManager()
         self._queue = deque(self._phases)
-        self.message_queue = MessageQueue(self.players_manager.players)
+        self.message_queue = MessageManager(self.players_manager.players)
         self._set_phase_queue_index_null()
 
     def _shift_phases(self) -> None:
@@ -117,16 +148,30 @@ class PhaseQueue:
             self.players_manager, self.message_queue, self._shift_phases
         )
 
-    def reset_queue(self, start_index=1) -> None:
+    def reset_queue(self, start_index=0) -> None:
+        """Resets queue, sets index to 0 or specified, resets players_manager data and deletes all timed tasks."""
         self._queue = deque(self._phases[start_index:])
         self._set_phase_queue_index_null()
+        self.players_manager.reset_all_game_data()
+        self.message_queue.delete_all_timed_tasks()
 
     async def player_loop(self, player) -> None:
+        """Main loop for client-server communication.
+
+        In an infinite loop, it:
+        1. Waits for a message from player.
+        2. Validates the message with a validator specified in current phase.
+        3. Calls the task's function specified in message.task.
+        4. Checks if the task is supposed to end any timed task for the player. If is then stops it.
+        5. Sends the message back to specified in it's phase class players.
+        6. ERROR: Catches ValidationError from pydantic or ServerException from ./errors.
+        """
         try:
             while True:
                 message = await player.websocket.receive_json()
                 task = self._current_phase.validator(**message)
                 task_name = task.task
+                print(self._current_phase.__class__.__name__)
                 task_function, send_function_type = self._current_phase.tasks[task_name]
                 await task_function(player=player, task=task)
                 if task_name in self.message_queue.timed_tasks[player.game_id]:

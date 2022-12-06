@@ -15,6 +15,12 @@ class Task(BaseModel):
     game_id: Optional[int]
 
 
+class PlayerLeave(BaseModel):
+    task: Literal["player_leave"]
+    game_id: int
+    new_creator_game_id: int
+
+
 class PlayerJoin(BaseModel):
     task: Literal["player_join"]
     nickname: str
@@ -45,7 +51,9 @@ class StartingCharacterPick(Task):
 
 
 class HelperMessages(BaseModel):
-    task: Literal["characters_picked", "asking_overtime", "answering_overtime"]
+    task: Literal[
+        "characters_picked", "asking_overtime", "answering_overtime", "guess_character"
+    ]
     game_id: Optional[int]
 
 
@@ -57,7 +65,6 @@ class QuestionAsk(Task):
 
 
 class GameEnd(BaseModel):
-    task: Literal["game_end"] = "game_end"
+    task: Literal["game_end, restart_game"] = "game_end"
     winner_id: Optional[int]
     character_name: Optional[str]
-    restart: Optional[bool]

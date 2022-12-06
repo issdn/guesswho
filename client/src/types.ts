@@ -13,9 +13,15 @@ export type Error = {
 	field?: string;
 };
 
+export type PlayerLeave = {
+	task: 'player_leave';
+	game_id: number;
+	new_creator_game_id: number;
+};
+
 /* ----------- Lobby Types  ----------- */
 export type LobbyTask = {
-	task: 'player_ready' | 'player_leave' | 'set_creator' | 'start_game';
+	task: 'player_ready' | 'start_game';
 	game_id: number;
 };
 
@@ -43,12 +49,15 @@ export type GameEnd = {
 	task: 'game_end';
 	winner_id: number;
 	character_name: string;
-	restart: boolean;
 };
 
 export type HelperMessage = {
-	task: 'characters_picked' | 'asking_overtime' | 'answering_overtime';
+	task: 'characters_picked' | 'asking_overtime' | 'answering_overtime' | 'restart_game';
 	game_id?: number;
 };
 
-export type GameTask = PickStartingCharacter | Question | GameEnd | HelperMessage;
+export type GameTask =
+	| PickStartingCharacter
+	| Question
+	| GameEnd
+	| (Omit<HelperMessage, 'task'> & { task: Exclude<HelperMessage['task'], 'restart_game'> });

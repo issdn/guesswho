@@ -10,9 +10,9 @@ import {
     token,
     myGameId,
     asking,
-} from "../stores"
+} from "../../stores"
 import GameInfoBar from "./GameInfoBar.svelte";
-import { Config } from "../config";
+import { Config } from "../../config";
 
 /* Darken the screen when choosing a character. */
 let darkened: boolean = false

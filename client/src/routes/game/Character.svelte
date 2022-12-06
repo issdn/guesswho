@@ -1,25 +1,27 @@
 <script lang="ts">
 import {
     sendTask
-} from "../socketStore";
+} from "../../socketStore";
 import {
     token,
     pickedCharacter,
-    guessing
-} from "../stores";
+    guessing,
+    asking
+} from "../../stores";
 import {
     shadowhandler,
     conditionalhandler
-} from "../actions"
-import {Config} from "../config"
+} from "../../actions"
+import {Config} from "../../config"
+	import { prettifyCharacterName } from "../../scripts";
 
 export let darken: (value: boolean) => void;
 export let characterName: string;
 
-const prettyCharacterName: string = characterName.split("_").join(" ")
+const prettyCharacterName: string = prettifyCharacterName(characterName)
 
 let isFlipped: boolean = false
-$: isGuessing = $guessing && $pickedCharacter !== ""
+$: isGuessing = $guessing && $pickedCharacter !== "" && $asking
 $: isPicking = $pickedCharacter === ""
 
 const fetchImage = (async () => {
@@ -56,7 +58,7 @@ $: currentAction = getCurrentAction(isPicking, isGuessing)
 
 <div
     use:conditionalhandler={currentAction}
-    use:shadowhandler={isGuessing||isPicking}
+    use:shadowhandler={(isGuessing&&$asking)||(isPicking&&$asking)}
     on:shadowenter={() => {darken(true)}}
     on:shadowleave={() => {darken(false)}}
     class="min-w-[8rem] sm:w-40 min-h-[11.5rem] sm:min-h-[13.5rem] hover:z-10 p-2 rounded-xl preserve3d bg-lemon duration-500 cursor-pointer border-4 border-[#FFA90A]

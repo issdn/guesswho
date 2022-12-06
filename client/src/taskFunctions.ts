@@ -8,9 +8,11 @@ import {
 	question,
 	asking,
 	answer,
-	endGameInfo,
+	gameEndInfo,
 	timer,
-	gamePhase
+	gamePhase,
+	sendToast,
+	resetAll
 } from './stores';
 import type {
 	PlayerJoin,
@@ -19,7 +21,8 @@ import type {
 	GameEnd,
 	HelperMessage,
 	PickStartingCharacter,
-	LobbyTask
+	LobbyTask,
+	PlayerLeave
 } from './types';
 
 const filterObject = (obj: object, game_id: number) => {
@@ -29,6 +32,7 @@ const filterObject = (obj: object, game_id: number) => {
 
 let _game: PlayerStore;
 let _enemyGameId: number;
+let _myGameId: number;
 
 /** ----------------------------- LOBBY TASKS ----------------------------- */
 
@@ -54,9 +58,22 @@ const playerReady = (message: LobbyTask) => {
 	});
 };
 
-const playerLeave = (message: LobbyTask) => {
-	game.set(filterObject(_game, (message as LobbyTask).game_id));
+const playerLeave = (message: PlayerLeave) => {
+	game.subscribe((g) => (_game = g));
+	game.set({
+		..._game,
+		[(message as PlayerLeave).new_creator_game_id]: {
+			..._game[(message as PlayerLeave).new_creator_game_id],
+			creator: true,
+			ready: false
+		}
+	});
+	enemyGameId.subscribe((id) => (_enemyGameId = id));
+	sendToast(`${_game[_enemyGameId].nickname} left the game 😢`, 2500, 'warning');
+	game.set(filterObject(_game, (message as PlayerLeave).game_id));
+	enemyGameId.set(-1);
 	phase.set('lobby');
+	resetAll();
 };
 
 const gameStart = (message: LobbyTask) => {
@@ -67,6 +84,7 @@ const gameStart = (message: LobbyTask) => {
 
 const startingCharacterPicked = (message: PickStartingCharacter) => {
 	pickedCharacter.set((message as PickStartingCharacter).character_name as string);
+	timer.set(Config.ASKING_TIME);
 };
 
 const questionAsked = (message: Question) => {
@@ -96,7 +114,6 @@ const characterGuessed = (message: Question) => {
 };
 
 const charactersPicked = (message: HelperMessage) => {
-	let _myGameId;
 	myGameId.subscribe((id) => (_myGameId = id));
 	message.game_id === _myGameId ? asking.set(true) : asking.set(false);
 	gamePhase.set('question');
@@ -104,15 +121,31 @@ const charactersPicked = (message: HelperMessage) => {
 
 const gameEnded = (message: GameEnd) => {
 	phase.set('end');
-	endGameInfo.set(message as GameEnd);
+	gameEndInfo.set(message as GameEnd);
 };
 
 const askingOvertime = (message: HelperMessage) => {
-	asking.set(false);
+	myGameId.subscribe((id) => (_myGameId = id));
+	if (_myGameId === message.game_id) {
+		asking.set(false);
+	} else {
+		asking.set(true);
+	}
 };
 
 const answeringOvertime = (message: HelperMessage) => {
-	asking.set(true);
+	myGameId.subscribe((id) => (_myGameId = id));
+	if (_myGameId === message.game_id) {
+		asking.set(false);
+		question.set('');
+	} else {
+		asking.set(true);
+	}
+};
+
+const restartGame = (message: HelperMessage) => {
+	phase.set('lobby');
+	resetAll();
 };
 
 export {
@@ -127,5 +160,6 @@ export {
 	charactersPicked,
 	gameEnded,
 	askingOvertime,
-	answeringOvertime
+	answeringOvertime,
+	restartGame
 };

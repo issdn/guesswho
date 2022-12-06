@@ -1,10 +1,11 @@
 <script lang="ts">
-    import Game from "./Game.svelte";
+    import Game from "./game/Game.svelte";
     import Lobby from "./Lobby.svelte"
     import { token, phase, nickname} from "../stores"
     import { joinSocket } from "../socketStore"
-	import ToastContainer from "./ToastContainer.svelte";
+	import ToastContainer from "./utils/ToastContainer.svelte";
 	import { Config } from "../config";
+	import GameEnd from "./GameEnd.svelte";
 
     const createNewGame = async () => {
         await fetch(`${Config.BASE_URL}/newgame`, {method: "POST"}).
@@ -51,5 +52,7 @@
     <Lobby/>
     {:else if $phase === "game"}
     <Game/>
+    {:else if $phase === "end"}
+        <GameEnd/>
     {/if}
 <ToastContainer/>

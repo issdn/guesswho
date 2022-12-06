@@ -34,9 +34,9 @@ export const phase = writable<
 /** Necessary to determine which text to show in the info bar on top. */
 export const gamePhase = writable<
 	ConfigType['GAME_PHASE_QUESTION'] | ConfigType['GAME_PHASE_PICK']
->('pick');
+>(Config['GAME_PHASE_PICK']);
 /** Stats and info at the end of the game.  */
-export const endGameInfo = writable<GameEnd>();
+export const gameEndInfo = writable<GameEnd>();
 
 /** Keeps time of picking a character, asking, answering etc. */
 export const timer = writable<
@@ -59,4 +59,14 @@ export const sendToast = (message: string, timeout = 4000, type: 'warning' | 'su
 
 export const removeToast = (id: string) => {
 	toasts.update((all) => all.filter((t) => t.id !== id));
+};
+
+/** Resets every all gameplay-necessary data */
+export const resetAll = () => {
+	question.set('');
+	answer.set('');
+	asking.set(false);
+	guessing.set(false);
+	gamePhase.set(Config['GAME_PHASE_PICK']);
+	pickedCharacter.set('');
 };

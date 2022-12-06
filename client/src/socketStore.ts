@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import { handleTask } from './socket';
+import { handleTask } from './taskHandler';
 import { token, nickname, myGameId } from './stores';
 
 const baseSocketUrl = 'ws://localhost:8000';

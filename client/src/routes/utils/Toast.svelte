@@ -1,6 +1,6 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
-    import { removeToast } from "../stores";
+    import { removeToast } from "../../stores";
     const sleep = (time: number) => new Promise(res => setTimeout(res, time));
   
     const types = {
