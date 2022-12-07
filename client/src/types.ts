@@ -43,6 +43,7 @@ export type Question = {
 	question?: string;
 	answer?: 'yes' | 'no' | 'idk';
 	character_name?: string;
+	game_id: number;
 };
 
 export type GameEnd = {

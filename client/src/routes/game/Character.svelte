@@ -12,8 +12,7 @@ import {
     conditionalhandler
 } from "../../actions"
 import {Config} from "../../config"
-	import { prettifyCharacterName } from "../../scripts";
-	import { onMount } from "svelte";
+import { prettifyCharacterName } from "../../scripts";
 
 export let darken: (value: boolean) => void;
 export let characterName: string;

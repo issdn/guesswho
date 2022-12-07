@@ -1,7 +1,6 @@
 import { derived, writable } from 'svelte/store';
 import type { PlayerStore, GameEnd } from './types';
 import { Config, type ConfigType } from './config';
-import { updated } from '$app/stores';
 
 /** Character picked by the player  */
 export const pickedCharacter = writable<string>('');
@@ -29,7 +28,7 @@ export const guessing = writable<boolean>(false);
 export const canGuess = derived(
 	[pickedCharacter, asking, guessing],
 	([$pickedCharacter, $asking, $guessing]) => {
-		return $pickedCharacter === '' && $asking && $guessing;
+		return $pickedCharacter !== '' && $asking && $guessing;
 	}
 );
 export const picking = derived(pickedCharacter, ($pickedCharacter) => !$pickedCharacter);
@@ -46,9 +45,7 @@ export const gamePhase = writable<
 >(Config['GAME_PHASE_PICK']);
 /** Stats and info at the end of the game.  */
 export const gameEndInfo = writable<GameEnd>();
-// export const timer = writable<
-// 	ConfigType['PICKING_TIME'] | ConfigType['ANSWERING_TIME'] | ConfigType['ASKING_TIME']
-// >(Config.PICKING_TIME);
+
 const newTimer = () => {
 	let time: number = Config.ANSWERING_TIME;
 	const { subscribe, set, update } = writable<number>(Config.PICKING_TIME);

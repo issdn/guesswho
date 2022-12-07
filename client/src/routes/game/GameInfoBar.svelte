@@ -7,7 +7,8 @@ import {
     enemyGameId,
     pickedCharacter,
     guessing,
-    gamePhase
+    gamePhase,
+	timer
 } from "../../stores"
 import {
     sendTask
@@ -15,9 +16,7 @@ import {
 import Button from "../Button.svelte";
 import TextLoading from "../utils/TextLoading.svelte";
 import Timer from "../Timer.svelte";
-
 let newQuestion: string;
-let asked = false
 
 let isAskModalOpen = false
 
@@ -34,7 +33,6 @@ const handleQuestionSend = (e: Event) => {
     sendTask(e, "ask_question", {
         question: newQuestion
     })
-    asked = true
     setAskModalClose()
 }
 
@@ -42,8 +40,6 @@ const handleQuestionAnswer = (e: Event, answer: "yes" | "no" | "idk") => {
     sendTask(e, "answer_question", {
         answer: answer
     })
-    question.set("")
-    asked = false
 }
 </script>
 
@@ -51,44 +47,42 @@ const handleQuestionAnswer = (e: Event, answer: "yes" | "no" | "idk") => {
     <Timer/>
         <div class="flex flex-row w-full gap-x-24 gap-y-4 xl:gap-y-0 items-center justify-center xl:justify-between flex-wrap text-lemon text-4xl ">
             {#if $gamePhase === "pick"}
-            {#if !$pickedCharacter}
-            <TextLoading>It's your time to pick a character</TextLoading>
-            {:else}
-            <TextLoading>{enemyNickname}&nbsp;is picking a character</TextLoading>
-            {/if}
-            {:else if $gamePhase === "ask" || $gamePhase === "answer"}
-            {#if $asking}
-            {#if !asked}
-            <div class="flex flex-col items-center gap-y-4 md:flex-row md:gap-x-8">
-                <Button onClickFunc={setAskModalOpen}>
-                    Ask a question
-                </Button>
-                <div class="text-lemon text-4xl">or</div>
-                <Button onClickFunc={() => guessing.set(!$guessing)} style={$guessing ? "bg-lemonh" : "bg-lemon"}>
-                    {#if !$guessing}
-                    guess the character
+                {#if !$pickedCharacter}
+                    <TextLoading>It's your time to pick a character</TextLoading>
                     {:else}
-                    <TextLoading>
-                        guessing
-                    </TextLoading>
-                    {/if}
-                </Button>
-            </div>
-            {:else}
-            <TextLoading>{enemyNickname}&nbsp;is answering</TextLoading>
-            {/if}
-            {:else}
-            {#if $question}
-            <p>{enemyNickname}:&nbsp;{$question}</p>
-            <div class="flex flex-row gap-2 text-black">
-                <button on:click={(e) => {handleQuestionAnswer(e, "yes")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">Yes!</button>
-                <button on:click={(e) => {handleQuestionAnswer(e, "no")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">No!</button>
-                <button on:click={(e) => {handleQuestionAnswer(e, "idk")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">I don't understand.</button>
-            </div>
-            {:else}
-            <TextLoading>{enemyNickname}&nbsp;is asking</TextLoading>
-            {/if}
-            {/if}
+                    <TextLoading>{enemyNickname}&nbsp;is picking a character</TextLoading>
+                {/if}
+            {:else if $gamePhase === "ask"}
+                {#if $asking}
+                <div class="flex flex-col items-center gap-y-4 md:flex-row md:gap-x-8">
+                    <Button onClickFunc={setAskModalOpen}>
+                        Ask a question
+                    </Button>
+                    <div class="text-lemon text-4xl">or</div>
+                    <Button onClickFunc={() => guessing.set(!$guessing)} style={$guessing ? "bg-lemonh" : "bg-lemon"}>
+                        {#if !$guessing}
+                        guess the character
+                        {:else}
+                        <TextLoading>
+                            guessing
+                        </TextLoading>
+                        {/if}
+                    </Button>
+                </div>
+                {:else}
+                <TextLoading>{enemyNickname}&nbsp;is asking</TextLoading>
+                {/if}
+            {:else if $gamePhase === "answer"}
+                {#if $question}
+                    <p>{enemyNickname}:&nbsp;{$question}</p>
+                    <div class="flex flex-row gap-2 text-black">
+                        <button on:click={(e) => {handleQuestionAnswer(e, "yes")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">Yes!</button>
+                        <button on:click={(e) => {handleQuestionAnswer(e, "no")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">No!</button>
+                        <button on:click={(e) => {handleQuestionAnswer(e, "idk")}} class="bg-lemon px-4 py-1 h-fit rounded-md hover:bg-mikado">I don't understand.</button>
+                    </div>
+                {:else}
+                <TextLoading>{enemyNickname}&nbsp;is asnwering</TextLoading>
+                {/if}
             {/if}
         </div>
         </div>

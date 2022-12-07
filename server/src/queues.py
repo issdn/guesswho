@@ -55,7 +55,6 @@ class MessageManager:
         overtime_callback,
         additional_params=(),
     ) -> None:
-        print(additional_params)
         timer = Timer(
             delete_timed_task=self.delete_timed_task,
             timeout=time,
@@ -166,19 +165,18 @@ class PhaseQueue:
         5. Sends the message back to specified in it's phase class players.
         6. ERROR: Catches ValidationError from pydantic or ServerException from ./errors.
         """
-        try:
-            while True:
+        while True:
+            try:
                 message = await player.websocket.receive_json()
                 task = self._current_phase.validator(**message)
                 task_name = task.task
-                print(self._current_phase.__class__.__name__)
                 task_function, send_function_type = self._current_phase.tasks[task_name]
                 await task_function(player=player, task=task)
                 if task_name in self.message_queue.timed_tasks[player.game_id]:
                     self.message_queue.timed_tasks[player.game_id][task_name].stop()
                 await self.message_queue.send_message(send_function_type, task, player)
-        except (ValidationError, ServerException) as e:
-            await self._send_error(e, player.websocket)
+            except (ValidationError, ServerException) as e:
+                await self._send_error(e, player.websocket)
 
     async def _send_error(
         self,
@@ -191,12 +189,9 @@ class PhaseQueue:
                     type="error", message=error["msg"], field=error["loc"][0]
                 )
                 await websocket.send_json(validated_error.json())
-            await websocket.close()
         elif isinstance(error, ServerException):
             validated_error = Error(message=error.message)
-        elif isinstance(error, Error):
-            await websocket.send_json(error.json())
-            await websocket.close()
+            await websocket.send_json(validated_error.json())
         else:
             raise CriticalServerException(
                 f"{error.__class__.__name__} is an invalid error object!"

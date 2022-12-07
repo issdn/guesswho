@@ -40,15 +40,18 @@ const playerJoin = (message: PlayerJoin) => {
 	game.subscribe((g) => (_game = g));
 	message.players.forEach((p) => {
 		game.set({ ..._game, [p.game_id]: p });
+		console.log((message as PlayerJoin).game_id, p.game_id);
 		(message as PlayerJoin).game_id === p.game_id
-			? myGameId.set(message.game_id as number)
-			: enemyGameId.set(message.game_id as number);
+			? myGameId.set(p.game_id as number)
+			: enemyGameId.set(p.game_id as number);
 	});
 	phase.set('lobby');
 };
 
 const playerReady = (message: LobbyTask) => {
 	game.subscribe((g) => (_game = g));
+	enemyGameId.subscribe((_id) => (_enemyGameId = _id));
+	myGameId.subscribe((_id2) => (_myGameId = _id2));
 	game.set({
 		..._game,
 		[(message as LobbyTask).game_id]: {
@@ -56,6 +59,8 @@ const playerReady = (message: LobbyTask) => {
 			ready: !_game[(message as LobbyTask).game_id].ready
 		}
 	});
+	console.log(_game);
+	console.log(_myGameId, _enemyGameId);
 };
 
 const playerLeave = (message: PlayerLeave) => {
@@ -87,18 +92,31 @@ const startingCharacterPicked = (message: PickStartingCharacter) => {
 };
 
 const questionAsked = (message: Question) => {
-	question.set((message as Question).question as string);
+	myGameId.subscribe((id) => (_myGameId = id));
 	gamePhase.set(Config['GAME_PHASE_ANSWER']);
+	if (message.game_id !== _myGameId) {
+		question.set((message as Question).question as string);
+	} else asking.set(false);
 };
 
 const questionAnswered = (message: Question) => {
-	answer.set((message as Question).answer as 'yes' | 'no' | 'idk');
-	if ((message as Question).answer === 'yes' || (message as Question).answer === 'no') {
-		let _asking;
-		asking.subscribe((a) => (_asking = a));
-		asking.set(!_asking);
-	}
 	gamePhase.set(Config['GAME_PHASE_ASK']);
+	answer.set((message as Question).answer as 'yes' | 'no' | 'idk');
+	myGameId.subscribe((id) => (_myGameId = id));
+	if (message.game_id !== _myGameId) {
+		if ((message as Question).answer === 'yes' || (message as Question).answer === 'no') {
+			asking.set(false);
+		} else if ((message as Question).answer === 'idk') {
+			asking.set(true);
+		}
+	} else {
+		if ((message as Question).answer === 'yes' || (message as Question).answer === 'no') {
+			asking.set(true);
+		} else if ((message as Question).answer === 'idk') {
+			asking.set(false);
+			question.set('');
+		}
+	}
 };
 
 const characterGuessed = (message: Question) => {

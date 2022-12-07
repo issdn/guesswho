@@ -8,8 +8,6 @@ class CriticalServerException(Exception):
     pass
 
 
-errors_by_code = {
-    "ASKING_PLAYER_NOT_SPECIFIED": "Server error.",
-    "INVALID_ASKING_PLAYER": "It's enemy's turn to ask.",
-    "NONEXISTENT CHARACTER": "Picked character doesn't exist. Could'd be a server error.",
-}
+ASKING_PLAYER_NOT_SPECIFIED = "Server error."
+INVALID_ASKING_PLAYER = "It's enemy's turn to ask."
+NONEXISTENT_CHARACTER = "Picked character doesn't exist. Could'd be a server error."

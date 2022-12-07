@@ -1,5 +1,4 @@
 from typing import Literal
-from pydantic import ValidationError
 from players_manager import Player
 from models import (
     HelperMessages,
@@ -9,7 +8,7 @@ from models import (
     StartingCharacterPick,
     Task,
 )
-from errors import ServerException, errors_by_code
+import errors
 from config import Config
 
 
@@ -86,12 +85,9 @@ class LobbyPhase(BasePhase):
         player.switch_ready()
 
     async def start_game(self, player: Player, task: Task):
-        try:
-            self._players_manager.can_start_game(player)
-            self._players_manager.draw_starting_player()
-            self._shift_phases()
-        except (ServerException, ValidationError) as e:
-            raise e
+        self._players_manager.can_start_game(player)
+        self._players_manager.draw_starting_player()
+        self._shift_phases()
 
 
 class PickCharacterPhase(BasePhase):
@@ -138,38 +134,24 @@ class GamePhase(BasePhase):
     def __init__(self, players_manager, message_queue, shift_phases):
         super().__init__(players_manager, message_queue, shift_phases)
         self.validator = QuestionAsk
-        self._message_queue.add_timed_task(
-            self._players_manager.currently_asking_player_game_id,
-            Config.ASKING_TIME,
-            "ask_question",
-            self._ask_answer_overtime,
-            ("asking_overtime",),
-        )
+        self._add_asking_timed_task()
 
-    async def ask_question_1(self, player: Player, task: QuestionAsk) -> None:
+    async def ask_question(self, player: Player, task: QuestionAsk) -> None:
         self._check_asking_player_specified()
         self._check_correct_player_asking(player)
-        if player.game_id != self._players_manager.currently_asking_player_game_id:
-            raise ServerException(errors_by_code["INVALID_ASKING_PLAYER"])
-        self._message_queue.add_timed_task(
-            self._players_manager.currently_answering_player_game_id,
-            Config.ASKING_TIME,
-            "answer_question",
-            self._ask_answer_overtime,
-            ("answering_overtime",),
-        )
+        self._add_answering_timed_task()
 
     async def answer_question(self, player: Player, task: QuestionAsk) -> None:
         self._check_asking_player_specified()
         self._check_correct_player_answering(player)
         if task.answer != "idk":
             self._players_manager.change_currently_asking_player_game_id()
+        self._add_asking_timed_task()
 
     async def guess_character_4(self, player: Player, task: QuestionAsk) -> None:
         if task.character_name not in self._players_manager.image_names:
-            assert ServerException(errors_by_code["NONEXISTENT CHARACTER"])
-        if task.game_id != self._players_manager.currently_asking_player_game_id:
-            raise ServerException(errors_by_code["INVALID_ASKING_PLAYER"])
+            assert errors.ServerException(errors.NONEXISTENT_CHARACTER)
+        self._check_correct_player_asking()
         if self._players_manager.get_enemy(player).character == task.character_name:
             await self._message_queue.send_message(
                 0, GameEnd(character_name=player.character, winner_id=player.game_id)
@@ -193,25 +175,37 @@ class GamePhase(BasePhase):
             0, HelperMessages(task=task_name, game_id=_overtime_player_id)
         )
         self._players_manager.change_currently_asking_player_game_id()
+        self._add_asking_timed_task()
+
+    def _add_asking_timed_task(self) -> None:
         self._message_queue.add_timed_task(
-            self._players_manager.currently_answering_player_game_id,
+            self._players_manager.currently_asking_player_game_id,
             Config.ASKING_TIME,
-            "answer_question",
+            "ask_question",
             self._ask_answer_overtime,
             ("asking_overtime",),
         )
 
+    def _add_answering_timed_task(self) -> None:
+        self._message_queue.add_timed_task(
+            self._players_manager.currently_answering_player_game_id,
+            Config.ANSWERING_TIME,
+            "answer_question",
+            self._ask_answer_overtime,
+            ("answering_overtime",),
+        )
+
     def _check_asking_player_specified(self) -> None:
         if self._players_manager.currently_asking_player_game_id == None:
-            raise ServerException(errors_by_code["ASKING_PLAYER_NOT_SPECIFIED"])
+            raise errors.ServerException(errors.ASKING_PLAYER_NOT_SPECIFIED)
 
     def _check_correct_player_asking(self, player: Player) -> None:
         if player.game_id != self._players_manager.currently_asking_player_game_id:
-            raise ServerException(errors_by_code["INVALID_ASKING_PLAYER"])
+            raise errors.ServerException(errors.INVALID_ASKING_PLAYER)
 
     def _check_correct_player_answering(self, player: Player) -> None:
         if player.game_id == self._players_manager.currently_asking_player_game_id:
-            raise ServerException(errors_by_code["INVALID_ASKING_PLAYER"])
+            raise errors.ServerException(errors.INVALID_ASKING_PLAYER)
 
 
 class EndGamePhase(BasePhase):
