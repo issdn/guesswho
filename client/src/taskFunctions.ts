@@ -1,4 +1,5 @@
 import { Config } from './config';
+import { setAllUndready, setPlayerUndready } from './scripts';
 import {
 	enemyGameId,
 	game,
@@ -12,7 +13,8 @@ import {
 	gamePhase,
 	sendToast,
 	resetAll,
-	timer
+	timer,
+	guessing
 } from './stores';
 import type {
 	PlayerJoin,
@@ -59,30 +61,22 @@ const playerReady = (message: LobbyTask) => {
 			ready: !_game[(message as LobbyTask).game_id].ready
 		}
 	});
-	console.log(_game);
-	console.log(_myGameId, _enemyGameId);
 };
 
 const playerLeave = (message: PlayerLeave) => {
 	game.subscribe((g) => (_game = g));
-	game.set({
-		..._game,
-		[(message as PlayerLeave).new_creator_game_id]: {
-			..._game[(message as PlayerLeave).new_creator_game_id],
-			creator: true,
-			ready: false
-		}
-	});
 	enemyGameId.subscribe((id) => (_enemyGameId = id));
 	sendToast(`${_game[_enemyGameId].nickname} left the game 😢`, 2500, 'warning');
+	setPlayerUndready(message.new_creator_game_id);
 	game.set(filterObject(_game, (message as PlayerLeave).game_id));
 	enemyGameId.set(-1);
-	phase.set('lobby');
+	phase.set(Config['PHASE_LOBBY']);
 	resetAll();
 };
 
 const gameStart = (message: LobbyTask) => {
-	phase.set('game');
+	phase.set(Config['PHASE_GAME']);
+	gamePhase.set(Config['GAME_PHASE_PICK']);
 };
 
 /** ----------------------------- GAME TASKS ----------------------------- */
@@ -120,14 +114,20 @@ const questionAnswered = (message: Question) => {
 };
 
 const characterGuessed = (message: Question) => {
-	asking.set(true);
-	enemyGameId.subscribe((e) => (_enemyGameId = e));
+	enemyGameId.subscribe((_id) => (_enemyGameId = _id));
 	game.subscribe((g) => (_game = g));
-	question.set(
-		`${_game[_enemyGameId].game_id} wrongly guessed a character with name ${
-			(message as Question).character_name as string
-		}`
-	);
+	timer.refresh();
+	if (message.game_id === _enemyGameId) {
+		asking.set(true);
+		// question.set(
+		// 	`${_game[_enemyGameId].game_id} wrongly guessed a character with name ${
+		// 		(message as Question).character_name as string
+		// 	}`
+		// );
+	} else {
+		asking.set(false);
+		guessing.set(false);
+	}
 };
 
 const charactersPicked = (message: HelperMessage) => {
@@ -138,6 +138,7 @@ const charactersPicked = (message: HelperMessage) => {
 
 const gameEnded = (message: GameEnd) => {
 	phase.set('end');
+	gamePhase.set(Config['NONE']);
 	gameEndInfo.set(message as GameEnd);
 };
 
@@ -165,6 +166,7 @@ const answeringOvertime = (message: HelperMessage) => {
 const restartGame = (message: HelperMessage) => {
 	phase.set('lobby');
 	resetAll();
+	setAllUndready();
 };
 
 export {

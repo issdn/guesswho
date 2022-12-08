@@ -65,6 +65,7 @@ class QuestionAsk(Task):
 
 
 class GameEnd(BaseModel):
-    task: Literal["game_end, restart_game"] = "game_end"
+    task: Literal["game_end", "restart_game"] = "game_end"
     winner_id: Optional[int]
+    game_id: Optional[int]
     character_name: Optional[str]

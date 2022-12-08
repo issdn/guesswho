@@ -1,8 +1,8 @@
 <script>
-    import Fa from 'svelte-fa/src/fa.svelte'
-    import { faQuestion } from '@fortawesome/free-solid-svg-icons'
+	import Fa from 'svelte-fa/src/fa.svelte';
+	import { faQuestion } from '@fortawesome/free-solid-svg-icons';
 </script>
 
 <div class="animate-yspin">
-    <Fa icon={faQuestion}/>
+	<Fa icon={faQuestion} />
 </div>

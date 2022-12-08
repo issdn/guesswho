@@ -41,7 +41,10 @@ export const phase = writable<
 >('');
 /** Necessary to determine which text to show in the info bar on top. */
 export const gamePhase = writable<
-	ConfigType['GAME_PHASE_ASK'] | ConfigType['GAME_PHASE_PICK'] | ConfigType['GAME_PHASE_ANSWER']
+	| ConfigType['GAME_PHASE_ASK']
+	| ConfigType['GAME_PHASE_PICK']
+	| ConfigType['GAME_PHASE_ANSWER']
+	| ConfigType['NONE']
 >(Config['GAME_PHASE_PICK']);
 /** Stats and info at the end of the game.  */
 export const gameEndInfo = writable<GameEnd>();

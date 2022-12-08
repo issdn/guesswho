@@ -141,10 +141,11 @@ class PhaseQueue:
     def _shift_phases(self) -> None:
         self._queue.popleft()
         self._set_phase_queue_index_null()
+        self.message_queue.delete_all_timed_tasks()
 
     def _set_phase_queue_index_null(self) -> None:
         self._current_phase = self._queue[0](
-            self.players_manager, self.message_queue, self._shift_phases
+            self.players_manager, self.message_queue, self._shift_phases, self.reset_queue
         )
 
     def reset_queue(self, start_index=0) -> None:
@@ -168,6 +169,7 @@ class PhaseQueue:
         while True:
             try:
                 message = await player.websocket.receive_json()
+                print(message)
                 task = self._current_phase.validator(**message)
                 task_name = task.task
                 task_function, send_function_type = self._current_phase.tasks[task_name]

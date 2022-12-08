@@ -41,11 +41,12 @@ class BasePhase:
         Thus the dictionary self.tasks will contain: { 'pick_starting_character_2' <string> : (pick_starting_character <function>, 2 <int>) }.
     """
 
-    def __init__(self, players_manager, message_queue, shift_phases):
+    def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
         self.tasks: dict[str, tuple[callable, int]] = self._get_tasks()
         self._players_manager = players_manager
         self._message_queue = message_queue
         self._shift_phases = shift_phases
+        self._reset_queue = reset_queue
 
     def _get_tasks(self) -> dict[str, tuple[callable, int]]:
         """
@@ -60,8 +61,8 @@ class BasePhase:
 
 
 class PlayersJoinPhase(BasePhase):
-    def __init__(self, players_manager, message_queue, shift_phases):
-        super().__init__(players_manager, message_queue, shift_phases)
+    def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
+        super().__init__(players_manager, message_queue, shift_phases, reset_queue)
         self.validator = PlayerJoin
 
     async def player_join_3(self, player: Player, task: PlayerJoin) -> None:
@@ -77,22 +78,24 @@ class PlayersJoinPhase(BasePhase):
 
 
 class LobbyPhase(BasePhase):
-    def __init__(self, players_manager, message_queue, shift_phases):
-        super().__init__(players_manager, message_queue, shift_phases)
+    def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
+        super().__init__(players_manager, message_queue, shift_phases, reset_queue)
         self.validator = Task
 
     async def player_ready(self, player: Player, task: Task) -> None:
         player.switch_ready()
 
     async def start_game(self, player: Player, task: Task):
+        if len(self._players_manager.players) < 2:
+            raise errors.ServerException(errors.LOBBY_INCOMPLETE)
         self._players_manager.can_start_game(player)
         self._players_manager.draw_starting_player()
         self._shift_phases()
 
 
 class PickCharacterPhase(BasePhase):
-    def __init__(self, players_manager, message_queue, shift_phases):
-        super().__init__(players_manager, message_queue, shift_phases)
+    def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
+        super().__init__(players_manager, message_queue, shift_phases, reset_queue)
         self.validator = StartingCharacterPick
         for game_player in self._players_manager.players:
             self._message_queue.add_timed_task(
@@ -131,8 +134,8 @@ class PickCharacterPhase(BasePhase):
 
 
 class GamePhase(BasePhase):
-    def __init__(self, players_manager, message_queue, shift_phases):
-        super().__init__(players_manager, message_queue, shift_phases)
+    def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
+        super().__init__(players_manager, message_queue, shift_phases, reset_queue)
         self.validator = QuestionAsk
         self._add_asking_timed_task()
 
@@ -151,16 +154,15 @@ class GamePhase(BasePhase):
     async def guess_character_4(self, player: Player, task: QuestionAsk) -> None:
         if task.character_name not in self._players_manager.image_names:
             assert errors.ServerException(errors.NONEXISTENT_CHARACTER)
-        self._check_correct_player_asking()
+        self._check_correct_player_asking(player)
         if self._players_manager.get_enemy(player).character == task.character_name:
             await self._message_queue.send_message(
                 0, GameEnd(character_name=player.character, winner_id=player.game_id)
             )
             self._shift_phases()
         else:
-            await self._message_queue.send_message(
-                0, HelperMessages(task="guess_character")
-            )
+            self._players_manager.change_currently_asking_player_game_id()
+            await self._message_queue.send_message(0, task)
 
     async def _ask_answer_overtime(
         self, task_name: Literal["answering_overtime", "asking_overtime"]
@@ -209,9 +211,11 @@ class GamePhase(BasePhase):
 
 
 class EndGamePhase(BasePhase):
-    def __init__(self, players_manager, message_queue, shift_phases):
-        super().__init__(players_manager, message_queue, shift_phases)
+    def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
+        super().__init__(players_manager, message_queue, shift_phases, reset_queue)
         self.validator = GameEnd
 
-    def restart_game(self) -> None:
-        pass
+    async def restart_game(self, player, task) -> None:
+        if not player.creator:
+            raise errors.ServerException(errors.PLAYER_NOT_CREATOR)
+        self._reset_queue(1)
