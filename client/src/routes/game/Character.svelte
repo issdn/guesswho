@@ -4,16 +4,18 @@
 	import { shadowhandler, conditionalhandler } from '../../actions';
 	import { Config } from '../../config';
 	import { prettifyCharacterName } from '../../scripts';
+	import Spinner from '../utils/Spinner.svelte';
 
 	export let darken: (value: boolean) => void;
 	export let characterName: string;
+	export let imageFileName: string;
 
 	const prettyCharacterName: string = prettifyCharacterName(characterName);
 
 	let isFlipped: boolean = false;
 
 	const fetchImage = (async () => {
-		const response = await fetch(`${Config.BASE_URL}/${$token}/characters/${characterName}`);
+		const response = await fetch(`${Config.BASE_URL}/${$token}/characters/${imageFileName}`);
 		return await response;
 	})();
 
@@ -58,7 +60,7 @@
     {$canGuess || $picking ? 'hover:-translate-y-3' : ''}"
 >
 	{#await fetchImage}
-		<p>loading...</p>
+		<Spinner />
 	{:then data}
 		<div class="w-full h-full transition-transform duration-1000 preserve3d">
 			<div class="absolute bg-lemon backface-hidden rotate-y-0">

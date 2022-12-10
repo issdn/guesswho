@@ -1,8 +1,5 @@
-<script>
-	import Fa from 'svelte-fa/src/fa.svelte';
-	import { faQuestion } from '@fortawesome/free-solid-svg-icons';
-</script>
-
-<div class="animate-yspin">
-	<Fa icon={faQuestion} />
+<div class="flex h-full w-full items-center justify-center">
+	<div
+		class="h-16 w-16 animate-spin rounded-full border-[.75rem] border-t-[.75rem] border-gray-900 border-t-gray-700"
+	/>
 </div>

@@ -51,7 +51,9 @@ class Player:
 class PlayersManager:
     def __init__(self) -> None:
         self.players: list[Player] = []
-        self.image_names: list[str] = get_random_image_names()
+        _image_name_path_tuples_list, _names = get_random_image_names()
+        self.image_name_path_tuples_list = _image_name_path_tuples_list
+        self.image_names: list[tuple[str, str]] = _names
         self.currently_asking_player_game_id = None
         self.currently_answering_player_game_id = None
 

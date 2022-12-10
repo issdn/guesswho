@@ -4,6 +4,7 @@
 	import { gameEndInfo, myGameId, enemyGameId, game } from '../stores';
 	import Button from './Button.svelte';
 	import { prettifyCharacterName } from '../scripts';
+	import TextLoading from './utils/TextLoading.svelte';
 
 	const winner = $gameEndInfo.winner_id === $myGameId;
 
@@ -87,5 +88,7 @@
 				sendTask(e, 'restart_game');
 			}}>Play Again</Button
 		>
+	{:else}
+		<TextLoading style="text-2xl">Wating for the creator to restart the game</TextLoading>
 	{/if}
 </div>

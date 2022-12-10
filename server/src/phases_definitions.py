@@ -85,7 +85,7 @@ class LobbyPhase(BasePhase):
     async def player_ready(self, player: Player, task: BaseTaskModel) -> None:
         player.switch_ready()
 
-    async def start_game(self, player: Player, task: BaseTaskModel):
+    async def start_game(self, player: Player, task: BaseTaskModel) -> None:
         if len(self._players_manager.players) < 2:
             raise errors.ServerException(errors.LOBBY_INCOMPLETE)
         self._players_manager.can_start_game(player)
@@ -94,7 +94,7 @@ class LobbyPhase(BasePhase):
 
 
 class PickCharacterPhase(BasePhase):
-    def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
+    def __init__(self, players_manager, message_queue, shift_phases, reset_queue) -> None:
         super().__init__(players_manager, message_queue, shift_phases, reset_queue)
         self.validator = StartingCharacterPickModel
         for game_player in self._players_manager.players:
@@ -121,7 +121,7 @@ class PickCharacterPhase(BasePhase):
         )
         await self._can_start()
 
-    async def _can_start(self):
+    async def _can_start(self) -> None:
         if self._players_manager.all_playes_characters_picked():
             await self._message_queue.send_message(
                 0,
@@ -134,7 +134,7 @@ class PickCharacterPhase(BasePhase):
 
 
 class GamePhase(BasePhase):
-    def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
+    def __init__(self, players_manager, message_queue, shift_phases, reset_queue) -> None:
         super().__init__(players_manager, message_queue, shift_phases, reset_queue)
         self.validator = QuestionModel
         self._add_asking_timed_task()

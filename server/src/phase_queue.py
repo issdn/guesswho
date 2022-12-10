@@ -45,7 +45,6 @@ class PhaseQueue:
         while True:
             try:
                 message = await player.websocket.receive_json()
-                print(message)
                 task = self._current_phase.validator(**message)
                 task_name = task.task
                 task_function, send_function_type = self._current_phase.tasks[task_name]

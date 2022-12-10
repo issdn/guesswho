@@ -12,7 +12,7 @@ class Timer:
         overtime_callback,
         ending_task_name,
         additional_params,
-    ):
+    ) -> None:
         self._delete_timed_tasks = delete_timed_task
         self._timeout = timeout
         self._player_game_id = player_game_id
@@ -23,12 +23,12 @@ class Timer:
             raise CriticalServerException("Additional params must be of type tuple.")
         self._task = asyncio.create_task(self._job())
 
-    async def _job(self):
+    async def _job(self) -> None:
         await asyncio.sleep(self._timeout)
         await self._overtime_callback(*self._additional_params)
         self._delete_timed_tasks(self._player_game_id, self._ending_task_name)
 
-    def stop(self):
+    def stop(self) -> None:
         """Stops currently running task (As in ``asyncio.create_task``)."""
         self._task.cancel()
         self._delete_timed_tasks(self._player_game_id, self._ending_task_name)

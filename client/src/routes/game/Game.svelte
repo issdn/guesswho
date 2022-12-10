@@ -10,12 +10,12 @@
 	let darkened: boolean = false;
 	const darken = (value: boolean) => (darkened = value);
 
-	let imageNames: [string];
+	let imageNames: [string, string][];
 
 	onMount(async () => {
 		await fetch(`${Config.BASE_URL}/${$token}/characters`)
 			.then((response) => response.json())
-			.then((data) => (imageNames = data.names));
+			.then((data) => (imageNames = data));
 	});
 </script>
 
@@ -23,8 +23,8 @@
 	<div class="flex h-full w-full flex-col gap-16 pt-8 sm:px-12 md:px-24">
 		<GameInfoBar />
 		<div class="flex h-full w-full flex-row flex-wrap justify-center gap-2 rounded-xl">
-			{#each imageNames as name}
-				<Character characterName={name} {darken} />
+			{#each imageNames as imageTuple}
+				<Character characterName={imageTuple[0]} imageFileName={imageTuple[1]} {darken} />
 			{/each}
 		</div>
 		{#if darkened}

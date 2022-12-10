@@ -81,19 +81,10 @@ module.exports = {
 					'100%': {
 						content: "''"
 					}
-				},
-				yspin: {
-					'0%': {
-						transform: 'rotateY(0deg)'
-					},
-					'100%': {
-						transform: 'rotateY(360deg)'
-					}
 				}
 			},
 			animation: {
-				dots: 'dots steps(1, end) 2s infinite',
-				yspin: 'yspin 3s linear infinite'
+				dots: 'dots steps(1, end) 2s infinite'
 			}
 		}
 	},
