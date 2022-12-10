@@ -1,12 +1,12 @@
 from typing import Literal
 from players_manager import Player
 from models import (
-    HelperMessages,
-    GameEnd,
-    PlayerJoin,
-    QuestionAsk,
-    StartingCharacterPick,
-    Task,
+    HelperMessageModel,
+    GameEndModel,
+    PlayerJoinModel,
+    QuestionModel,
+    StartingCharacterPickModel,
+    BaseTaskModel,
 )
 import errors
 from config import Config
@@ -31,7 +31,7 @@ class BasePhase:
     Every phase has it's own validator(model) for tasks.
 
     So, during PlayersJoinPhase the client can only send player_join task,
-    which structure is defined by PlayerJoin validator.
+    which structure is defined by PlayerJoinModel validator.
 
     To end a phase, use end_phase() method.
 
@@ -63,9 +63,9 @@ class BasePhase:
 class PlayersJoinPhase(BasePhase):
     def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
         super().__init__(players_manager, message_queue, shift_phases, reset_queue)
-        self.validator = PlayerJoin
+        self.validator = PlayerJoinModel
 
-    async def player_join_3(self, player: Player, task: PlayerJoin) -> None:
+    async def player_join_3(self, player: Player, task: PlayerJoinModel) -> None:
         """
         Set player's nickname taken from the task, add player to players_manager<PlayersManager>.
         If the lobby is full (2 players), end the phase.
@@ -80,12 +80,12 @@ class PlayersJoinPhase(BasePhase):
 class LobbyPhase(BasePhase):
     def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
         super().__init__(players_manager, message_queue, shift_phases, reset_queue)
-        self.validator = Task
+        self.validator = BaseTaskModel
 
-    async def player_ready(self, player: Player, task: Task) -> None:
+    async def player_ready(self, player: Player, task: BaseTaskModel) -> None:
         player.switch_ready()
 
-    async def start_game(self, player: Player, task: Task):
+    async def start_game(self, player: Player, task: BaseTaskModel):
         if len(self._players_manager.players) < 2:
             raise errors.ServerException(errors.LOBBY_INCOMPLETE)
         self._players_manager.can_start_game(player)
@@ -96,7 +96,7 @@ class LobbyPhase(BasePhase):
 class PickCharacterPhase(BasePhase):
     def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
         super().__init__(players_manager, message_queue, shift_phases, reset_queue)
-        self.validator = StartingCharacterPick
+        self.validator = StartingCharacterPickModel
         for game_player in self._players_manager.players:
             self._message_queue.add_timed_task(
                 player_game_id=game_player.game_id,
@@ -107,7 +107,7 @@ class PickCharacterPhase(BasePhase):
             )
 
     async def pick_starting_character_2(
-        self, player: Player, task: StartingCharacterPick
+        self, player: Player, task: StartingCharacterPickModel
     ) -> None:
         if task.character_name in self._players_manager.image_names:
             player.set_character(task.character_name)
@@ -117,7 +117,7 @@ class PickCharacterPhase(BasePhase):
         random_character = self._players_manager.draw_random_character_name()
         player.set_character(random_character)
         await self._message_queue.send_message(
-            2, self.validator(character_name=random_character), player
+            2, self.validator(character_name=random_character, overtime=True), player
         )
         await self._can_start()
 
@@ -125,7 +125,7 @@ class PickCharacterPhase(BasePhase):
         if self._players_manager.all_playes_characters_picked():
             await self._message_queue.send_message(
                 0,
-                HelperMessages(
+                HelperMessageModel(
                     task="characters_picked",
                     game_id=self._players_manager.currently_asking_player_game_id,
                 ),
@@ -136,28 +136,28 @@ class PickCharacterPhase(BasePhase):
 class GamePhase(BasePhase):
     def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
         super().__init__(players_manager, message_queue, shift_phases, reset_queue)
-        self.validator = QuestionAsk
+        self.validator = QuestionModel
         self._add_asking_timed_task()
 
-    async def ask_question(self, player: Player, task: QuestionAsk) -> None:
+    async def ask_question(self, player: Player, task: QuestionModel) -> None:
         self._check_asking_player_specified()
         self._check_correct_player_asking(player)
         self._add_answering_timed_task()
 
-    async def answer_question(self, player: Player, task: QuestionAsk) -> None:
+    async def answer_question(self, player: Player, task: QuestionModel) -> None:
         self._check_asking_player_specified()
         self._check_correct_player_answering(player)
         if task.answer != "idk":
             self._players_manager.change_currently_asking_player_game_id()
         self._add_asking_timed_task()
 
-    async def guess_character_4(self, player: Player, task: QuestionAsk) -> None:
+    async def guess_character_4(self, player: Player, task: QuestionModel) -> None:
         if task.character_name not in self._players_manager.image_names:
             assert errors.ServerException(errors.NONEXISTENT_CHARACTER)
         self._check_correct_player_asking(player)
         if self._players_manager.get_enemy(player).character == task.character_name:
             await self._message_queue.send_message(
-                0, GameEnd(character_name=player.character, winner_id=player.game_id)
+                0, GameEndModel(character_name=player.character, winner_id=player.game_id)
             )
             self._shift_phases()
         else:
@@ -174,7 +174,7 @@ class GamePhase(BasePhase):
         else:
             _overtime_player_id = self._players_manager.currently_asking_player_game_id
         await self._message_queue.send_message(
-            0, HelperMessages(task=task_name, game_id=_overtime_player_id)
+            0, HelperMessageModel(task=task_name, game_id=_overtime_player_id)
         )
         self._players_manager.change_currently_asking_player_game_id()
         self._add_asking_timed_task()
@@ -213,7 +213,7 @@ class GamePhase(BasePhase):
 class EndGamePhase(BasePhase):
     def __init__(self, players_manager, message_queue, shift_phases, reset_queue):
         super().__init__(players_manager, message_queue, shift_phases, reset_queue)
-        self.validator = GameEnd
+        self.validator = GameEndModel
 
     async def restart_game(self, player, task) -> None:
         if not player.creator:

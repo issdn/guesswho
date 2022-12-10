@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { setAllUndready, setPlayerUndready } from './scripts';
+import { prettifyCharacterName, setAllUndready, setPlayerUndready } from './scripts';
 import {
 	enemyGameId,
 	game,
@@ -14,7 +14,8 @@ import {
 	sendToast,
 	resetAll,
 	timer,
-	guessing
+	guessing,
+	sendNotification
 } from './stores';
 import type {
 	PlayerJoin,
@@ -83,6 +84,21 @@ const gameStart = (message: LobbyTask) => {
 
 const startingCharacterPicked = (message: PickStartingCharacter) => {
 	pickedCharacter.set((message as PickStartingCharacter).character_name as string);
+	if (message.overtime) {
+		sendNotification(
+			`Your character is \n${prettifyCharacterName(
+				(message as PickStartingCharacter).character_name as string
+			)}!`,
+			3000
+		);
+	} else {
+		sendNotification(
+			`Your picked ${prettifyCharacterName(
+				(message as PickStartingCharacter).character_name as string
+			)}!`,
+			3000
+		);
+	}
 };
 
 const questionAsked = (message: Question) => {
@@ -90,7 +106,10 @@ const questionAsked = (message: Question) => {
 	gamePhase.set(Config['GAME_PHASE_ANSWER']);
 	if (message.game_id !== _myGameId) {
 		question.set((message as Question).question as string);
-	} else asking.set(false);
+	} else {
+		asking.set(false);
+		question.set('');
+	}
 };
 
 const questionAnswered = (message: Question) => {
@@ -119,11 +138,14 @@ const characterGuessed = (message: Question) => {
 	timer.refresh();
 	if (message.game_id === _enemyGameId) {
 		asking.set(true);
-		// question.set(
-		// 	`${_game[_enemyGameId].game_id} wrongly guessed a character with name ${
-		// 		(message as Question).character_name as string
-		// 	}`
-		// );
+		sendNotification(
+			`${
+				_game[_enemyGameId].nickname
+			} wrongly guessed a character with name ${prettifyCharacterName(
+				(message as Question).character_name as string
+			)}`,
+			4000
+		);
 	} else {
 		asking.set(false);
 		guessing.set(false);
@@ -144,20 +166,29 @@ const gameEnded = (message: GameEnd) => {
 
 const askingOvertime = (message: HelperMessage) => {
 	myGameId.subscribe((id) => (_myGameId = id));
+	enemyGameId.subscribe((id) => (_enemyGameId = id));
+	game.subscribe((_g) => (_game = _g));
+	question.set('');
 	if (_myGameId === message.game_id) {
 		asking.set(false);
+		sendNotification('Time is up!');
 	} else {
 		asking.set(true);
+		sendNotification(`${_game[_enemyGameId].nickname} didn't answer on time!`);
 	}
 	timer.refresh();
 };
 
 const answeringOvertime = (message: HelperMessage) => {
 	myGameId.subscribe((id) => (_myGameId = id));
+	enemyGameId.subscribe((id) => (_enemyGameId = id));
+	game.subscribe((_g) => (_game = _g));
+	question.set('');
 	if (_myGameId === message.game_id) {
+		sendNotification('Time is up!');
 		asking.set(false);
-		question.set('');
 	} else {
+		sendNotification(`${_game[_enemyGameId].nickname} didn't ask on time!`);
 		asking.set(true);
 	}
 	timer.refresh();

@@ -11,9 +11,9 @@ from phases_definitions import (
     EndGamePhase,
 )
 from players_manager import Player
-from queues import PhaseQueue
+from phase_queue import PhaseQueue
 
-from models import Error, PlayerLeave
+from models import ErrorModel, PlayerLeaveModel
 
 app = FastAPI()
 
@@ -51,16 +51,10 @@ async def new_game():
 
 @app.websocket("/{token}/game/ws")
 async def game(token: str, websocket: WebSocket):
-    """
-    :: receive action
-    -> handle action by type
-    -> dispatch
-    """
     phase_queue = phase_queues[token]
-
     await websocket.accept()
     if len(phase_queue.players_manager.players) >= 2:
-        await phase_queue.send_error(Error("Lobby is full!"), websocket)
+        await phase_queue.send_error(ErrorModel(message="Lobby is full!"), websocket)
         return
     else:
         player = Player("anonymous", websocket)
@@ -75,7 +69,7 @@ async def game(token: str, websocket: WebSocket):
         for lobby_player in phase_queue.players_manager.players:
             await phase_queue.message_queue.send_task(
                 lobby_player,
-                PlayerLeave(
+                PlayerLeaveModel(
                     task="player_leave",
                     game_id=player_id,
                     new_creator_game_id=phase_queue.players_manager.get_new_creator().game_id,

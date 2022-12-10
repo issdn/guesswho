@@ -36,6 +36,7 @@ export type PickStartingCharacter = {
 	task: 'pick_starting_character';
 	character_name?: string;
 	game_id: number;
+	overtime: boolean;
 };
 
 export type Question = {

@@ -1,7 +1,7 @@
 import random
 from fastapi import WebSocket
 from starlette.datastructures import Address
-from models import PlayerInitInfo
+from models import PlayerInitInfoModel
 from errors import ServerException
 from image_manipulation import get_random_image_names
 
@@ -28,14 +28,14 @@ class Player:
     def set_character(self, character_name: str):
         self.character = character_name
 
-    def get_init_info(self) -> PlayerInitInfo:
-        """Returns PlayerInitInfo
+    def get_init_info(self) -> PlayerInitInfoModel:
+        """Returns PlayerInitInfoModel
         - nickname
         - creator - whether the player is the lobby creator
         - ready - whether the player is ready
         - game_id
         """
-        return PlayerInitInfo(
+        return PlayerInitInfoModel(
             nickname=self.nickname,
             creator=self.creator,
             ready=self.ready,

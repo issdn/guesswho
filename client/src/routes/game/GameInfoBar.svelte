@@ -7,31 +7,24 @@
 		enemyGameId,
 		pickedCharacter,
 		guessing,
-		gamePhase,
-		timer
+		gamePhase
 	} from '../../stores';
 	import { sendTask } from '../../socketStore';
 	import Button from '../Button.svelte';
 	import TextLoading from '../utils/TextLoading.svelte';
 	import Timer from '../Timer.svelte';
-	let newQuestion: string;
+	import AskQuestionModalInside from './AskQuestionModalInside.svelte';
 
-	let isAskModalOpen = false;
+	let isModalOpen = false;
 
 	let enemyNickname = $game[$enemyGameId].nickname;
 
-	const setAskModalOpen = () => {
-		isAskModalOpen = true;
+	const setModalOpen = () => {
+		isModalOpen = true;
+		console.log('DUMBASS');
 	};
-	const setAskModalClose = () => {
-		isAskModalOpen = false;
-	};
-
-	const handleQuestionSend = (e: Event) => {
-		sendTask(e, 'ask_question', {
-			question: newQuestion
-		});
-		setAskModalClose();
+	const setModalClose = () => {
+		isModalOpen = false;
 	};
 
 	const handleQuestionAnswer = (e: Event, answer: 'yes' | 'no' | 'idk') => {
@@ -42,7 +35,7 @@
 </script>
 
 <div
-	class="flex w-full flex-col items-center gap-x-24 gap-y-4 rounded-xl border-2 border-lemon py-4 px-8 xl:flex-row xl:px-24"
+	class="flex w-full flex-col items-center gap-x-16 gap-y-4 rounded-xl border-2 border-lemon py-4 px-8 xl:flex-row xl:px-24"
 >
 	<Timer />
 	<div
@@ -57,7 +50,7 @@
 		{:else if $gamePhase === 'ask'}
 			{#if $asking}
 				<div class="flex flex-col items-center gap-y-4 md:flex-row md:gap-x-8">
-					<Button onClickFunc={setAskModalOpen}>Ask a question</Button>
+					<Button onClickFunc={setModalOpen}>Ask a question</Button>
 					<div class="text-4xl text-lemon">or</div>
 					<Button
 						onClickFunc={() => guessing.set(!$guessing)}
@@ -75,7 +68,7 @@
 			{/if}
 		{:else if $gamePhase === 'answer'}
 			{#if $question}
-				<p>{enemyNickname}:&nbsp;{$question}</p>
+				<p class="break-all">{enemyNickname}:&nbsp;{$question}</p>
 				<div class="flex flex-row gap-2 text-black">
 					<button
 						on:click={(e) => {
@@ -103,19 +96,6 @@
 	</div>
 </div>
 
-<Modal modalOpen={isAskModalOpen} closeModal={setAskModalClose}>
-	<h1 class="text-center text-4xl text-black">Ask a question!</h1>
-	<textarea bind:value={newQuestion} class="h-full resize-none rounded-xl p-2 text-xl" />
-	<div class="flex w-full flex-row justify-between">
-		<button
-			on:click={(e) => {
-				handleQuestionSend(e);
-			}}
-			class="rounded-xl bg-space px-8 py-1">Ask</button
-		>
-		<button
-			on:click={setAskModalClose}
-			class="rounded-xl border-2 border-space px-8 py-1 text-space">Cancel</button
-		>
-	</div>
+<Modal modalOpen={isModalOpen} closeModal={setModalClose}>
+	<AskQuestionModalInside {setModalClose} />
 </Modal>

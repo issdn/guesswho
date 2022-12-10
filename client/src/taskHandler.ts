@@ -1,4 +1,4 @@
-import { phase } from './stores';
+import { phase, sendToast } from './stores';
 import type { PlayerJoin, Error, GameTask, LobbyTask, PlayerLeave, HelperMessage } from './types';
 
 import * as tf from './taskFunctions';
@@ -32,8 +32,9 @@ export const handleTask = (
 ) => {
 	console.log(message);
 	phase.subscribe((p) => (_phase = p));
-	if ((message as Error).type === 'error') alert((message as Error).message);
-	else if ((message as PlayerLeave).task === 'player_leave') {
+	if ((message as Error).type === 'error') {
+		sendToast((message as Error).message, 2000, 'warning');
+	} else if ((message as PlayerLeave).task === 'player_leave') {
 		tf.playerLeave(message as PlayerLeave);
 	} else if (_phase === 'lobby' || _phase === '') {
 		lobbyTask[(message as LobbyTask | PlayerJoin).task](message);

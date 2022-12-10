@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { sendTask } from '../../socketStore';
-	import { token, picking, canGuess } from '../../stores';
+	import { token, picking, canGuess, pickedCharacter } from '../../stores';
 	import { shadowhandler, conditionalhandler } from '../../actions';
 	import { Config } from '../../config';
 	import { prettifyCharacterName } from '../../scripts';
@@ -51,6 +51,9 @@
 		darken(false);
 	}}
 	class="min-h-[11.5rem] min-w-[8rem] cursor-pointer rounded-xl border-4 border-[#FFA90A] bg-lemon p-2 duration-500 preserve3d hover:z-10 sm:min-h-[13.5rem] sm:w-40
+	{characterName === $pickedCharacter
+		? "after:absolute after:-top-1 after:right-4 after:h-8 after:w-4 after:bg-ua after:content-[''] after:clip-path"
+		: ''}
     {isFlipped ? 'flip-y' : ''}
     {$canGuess || $picking ? 'hover:-translate-y-3' : ''}"
 >
@@ -60,7 +63,9 @@
 		<div class="w-full h-full transition-transform duration-1000 preserve3d">
 			<div class="absolute bg-lemon backface-hidden rotate-y-0">
 				<img src={data.url} alt="character" class="border-2 border-[#FFA90A]" />
-				<p class="text-lg sm:text-xl text-center my-[.15rem]">{prettyCharacterName}</p>
+				<p class="text-lg sm:text-xl text-center my-[.15rem]">
+					{prettyCharacterName}
+				</p>
 			</div>
 			<div class="absolute h-full w-full backface-hidden bg-lemon flip-y">
 				<div class="relative h-full w-full">

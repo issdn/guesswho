@@ -85,11 +85,24 @@ export const removeToast = (id: string) => {
 	toasts.update((all) => all.filter((t) => t.id !== id));
 };
 
+export const notifications = writable<{ id: string; message: string }[]>([]);
+
+export const sendNotification = (message: string, timeout = 4000) => {
+	const notificationId: string = id();
+	notifications.update((state) => [...state, { id: notificationId, message: message }]);
+	setTimeout(() => removeNotification(notificationId), timeout);
+};
+
+export const removeNotification = (id: string) => {
+	notifications.update((all) => all.filter((t) => t.id !== id));
+};
+
 /** Resets every all gameplay-necessary data */
 export const resetAll = () => {
 	question.set('');
 	answer.set('');
 	asking.set(false);
+	guessing.set(false);
 	gamePhase.set(Config['GAME_PHASE_PICK']);
 	pickedCharacter.set('');
 };

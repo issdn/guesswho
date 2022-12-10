@@ -16,6 +16,6 @@
 	});
 </script>
 
-<p class="text-7xl text-lemon">
+<p class="w-16 text-7xl {$timer > 10 ? 'text-lemon' : 'text-ua'}">
 	{$timer}
 </p>

@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import Character from './Character.svelte';
 	import { fade } from 'svelte/transition';
-	import { token, myGameId, asking } from '../../stores';
+	import { token } from '../../stores';
 	import GameInfoBar from './GameInfoBar.svelte';
 	import { Config } from '../../config';
 
