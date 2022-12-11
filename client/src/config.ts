@@ -1,5 +1,6 @@
 export const Config = {
-	BASE_URL: 'http://127.0.0.1:8000' as const,
+	HOST: "127.0.0.1" as const,
+	PORT: "80" as const,
 	PICKING_TIME: 15 as const,
 	ANSWERING_TIME: 60 as const,
 	ASKING_TIME: 60 as const,
@@ -14,5 +15,7 @@ export const Config = {
 	GAME_PHASE_ASK: 'ask' as const,
 	GAME_PHASE_ANSWER: 'answer' as const
 };
+
+export const BASE_URL = "http://" + Config.HOST + ":" + Config.PORT
 
 export type ConfigType = typeof Config;

@@ -2,7 +2,7 @@
 	import { sendTask } from '../../socketStore';
 	import { token, picking, canGuess, pickedCharacter } from '../../stores';
 	import { shadowhandler, conditionalhandler } from '../../actions';
-	import { Config } from '../../config';
+	import { BASE_URL } from '../../config';
 	import { prettifyCharacterName } from '../../scripts';
 	import Spinner from '../utils/Spinner.svelte';
 
@@ -15,7 +15,7 @@
 	let isFlipped: boolean = false;
 
 	const fetchImage = (async () => {
-		const response = await fetch(`${Config.BASE_URL}/${$token}/characters/${imageFileName}`);
+		const response = await fetch(`${BASE_URL}/${$token}/characters/${imageFileName}`);
 		return await response;
 	})();
 

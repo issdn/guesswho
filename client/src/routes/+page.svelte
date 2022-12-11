@@ -4,12 +4,12 @@
 	import { token, phase, nickname, sendNotification } from '../stores';
 	import { joinSocket } from '../socketStore';
 	import ToastContainer from './utils/ToastContainer.svelte';
-	import { Config } from '../config';
+	import { BASE_URL } from '../config';
 	import GameEnd from './GameEnd.svelte';
 	import NotificationContainer from './utils/NotificationContainer.svelte';
 
 	const createNewGame = async () => {
-		await fetch(`${Config.BASE_URL}/newgame`, { method: 'POST' })
+		await fetch(`${BASE_URL}/newgame`, { method: 'POST' })
 			.then((response) => response.json())
 			.then((data) => {
 				if (data.task == 'init') {

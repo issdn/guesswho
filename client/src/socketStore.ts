@@ -1,8 +1,9 @@
 import { writable } from 'svelte/store';
 import { handleTask } from './taskHandler';
 import { token, nickname, myGameId } from './stores';
+import { Config } from './config';
 
-const baseSocketUrl = 'ws://localhost:8000';
+const baseSocketUrl = 'ws://' + Config.HOST + ":" + Config.PORT;
 
 let _token: string;
 token.subscribe((t) => (_token = t));

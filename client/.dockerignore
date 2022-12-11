@@ -1,0 +1,8 @@
+.vscode*
+node_modules*
+.eslintignore
+.eslintrc.cjs
+.gitignore
+.npmrc
+.prettierignore
+.prettierrc

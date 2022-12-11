@@ -4,7 +4,7 @@ from os import listdir, rename
 from os.path import abspath
 from config import Config
 
-path = abspath(Config.CHARACTER_IMAGES_DIRECTORY_PATH) + "\\"
+path = abspath(Config.CHARACTER_IMAGES_DIRECTORY_PATH) + "/"
 images = [f for f in listdir(path)]
 with open("./mock_names.csv", "r") as f:
     image_names = ["_".join(image_name.split(",")) for image_name in f.readlines()]

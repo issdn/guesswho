@@ -4,7 +4,7 @@
 	import { fade } from 'svelte/transition';
 	import { token } from '../../stores';
 	import GameInfoBar from './GameInfoBar.svelte';
-	import { Config } from '../../config';
+	import { BASE_URL } from '../../config';
 
 	/* Darken the screen when choosing a character. */
 	let darkened: boolean = false;
@@ -13,7 +13,7 @@
 	let imageNames: [string, string][];
 
 	onMount(async () => {
-		await fetch(`${Config.BASE_URL}/${$token}/characters`)
+		await fetch(`${BASE_URL}/${$token}/characters`)
 			.then((response) => response.json())
 			.then((data) => (imageNames = data));
 	});
