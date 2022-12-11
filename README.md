@@ -24,7 +24,7 @@ Answer
 
 # How to run (Only tested on windows)
 
-Prep: Images of the characters I generated with help of [stylegen3](https://github.com/NVlabs/stylegan3) then put inside `server/src/characters` then scaled down to 128x128 with the script `resize_images()` inside file `server/src/image_manipulation.py`.
+Prep: Images of the characters I generated with help of [stylegan3](https://github.com/NVlabs/stylegan3) then put inside `server/src/characters` then scaled down to 128x128 with the script `resize_images()` inside file `server/src/image_manipulation.py`.
 You either have to generate them yourself, get different ones or download my images from [this link](https://drive.google.com/drive/folders/1W6Ib8meI1NBFotr9Echt3OLC0mn5wCXe?usp=sharing).
 Finally, put them `server/src/characters` and go to the next step.
 
@@ -66,14 +66,14 @@ Finally, put them `server/src/characters` and go to the next step.
 
 ---
 
-### My windows termina config for dev:
+### My windows terminal config for dev:
 
 ```
 {
     "guid": "{407bae8a-dc67-449a-9e80-9361be0382d2}",
     "hidden": false,
     "name": "guesswhoClient",
-    "startingDirectory": "E:\\guesswho\\client",
+    "startingDirectory": "PATH\\TO\\YOUR\\DIR\\guesswho\\client",
     "tabTitle": "guesswho_client",
     "commandline": "powershell.exe -NoExit \"npm run dev\""
 },
@@ -81,15 +81,15 @@ Finally, put them `server/src/characters` and go to the next step.
     "guid": "{c8c1b4ea-4e5a-448e-a439-7cf1e0fd79a6}",
     "hidden": false,
     "name": "guesswhoServer",
-    "startingDirectory": "E:\\guesswho\\server",
+    "startingDirectory": "PATH\\TO\\YOUR\\DIR\\guesswho\\server",
     "tabTitle": "guesswho_server",
     "commandline": "powershell.exe -NoExit \"cd src; .\\env\\Scripts\\activate;  uvicorn main:app --reload\""
 },
 ```
 
-### Commmand that i ran inside wsl 2 to generate images with stylegen3:
+### Commmand that i ran inside wsl 2 to generate images with [stylegan3](https://github.com/NVlabs/stylegan3):
 
-For loop, where 50..250 is the range of numbers of images to generate which is also used as a seed for stylegen.
+For loop, where 50..250 is the range of numbers of images to generate which is also used as a seed for stylegan.
 
 ```
 for i in {50..250}; do docker run --gpus all -it --rm --user $(id -u):$(id -g) -v `pwd`:/scratch --workdir /scratch -e HOME=/scratch stylegan3 python gen_images.py --outdir=out --trunc=1 --seeds=$i --network=https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-metfaces-1024x1024.pkl; done
